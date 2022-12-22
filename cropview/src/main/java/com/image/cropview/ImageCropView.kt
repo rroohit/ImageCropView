@@ -1,42 +1,32 @@
 package com.image.cropview
 
 import android.graphics.Bitmap
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.geometry.Offset
 
 /**
- *  ImageCropView which is responsible to draw all rect and edges with bitmap of an image in it
+ *  ImageCrop which is responsible to draw all rect and edges on bitmap
  *  @param bitmapImage Bitmap which has to cropped
  *
  */
-
-class ImageCropView(
-    bitmapImage: Bitmap
+class ImageCrop(
+    var bitmapImage: Bitmap
 ) : OnCrop {
 
+    val cropUtil = CropUtil(bitmapImage)
 
+    @Composable
+    fun ImageCropView() {
+
+    }
 
     override fun resetView() {
-
+        cropUtil.resetCropRect()
     }
-
-    override fun updateCropPoints(
-        circleOne: Offset,
-        circleTwo: Offset,
-        circleThree: Offset,
-        circleFour: Offset
-    ) {
-
-    }
-
 
 }
 
 interface OnCrop {
     fun resetView()
-    fun updateCropPoints(
-        circleOne: Offset,
-        circleTwo: Offset,
-        circleThree: Offset,
-        circleFour: Offset
-    )
+
 }
