@@ -1,6 +1,7 @@
 package com.image.cropview
 
 import android.graphics.Bitmap
+import android.util.Log
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import kotlin.math.abs
@@ -31,10 +32,8 @@ class CropUtil(var bitmapImage: Bitmap) {
     /**
      *  To handle minimum rect to be cropped from image
      */
-    var widthDiffInEdges: Float = bitmapImage.width / 7F
-        private set
-    var heightDiffInEdges: Float = bitmapImage.height / 7F
-        private set
+    private var widthDiffInEdges: Float = bitmapImage.width / 7F
+    private var heightDiffInEdges: Float = bitmapImage.height / 7F
 
     /**
      *  Edge of cropping rect point at top-left
@@ -87,6 +86,18 @@ class CropUtil(var bitmapImage: Bitmap) {
         private set
     var guideLineFour: GuideLinePoints = GuideLinePoints()
         private set
+
+    /**
+     *  Update crop size
+     */
+    fun updateBitmapSizeChange(width: Int, height: Int) {
+        this.canvasWidth = width
+        this.canvasHeight = height
+        this.widthDiffInEdges = width / 7f
+        this.heightDiffInEdges = height / 7f
+        resetCropRect()
+
+    }
 
     /**
      *  Function to crop the bitmap respected to new rect bounds to crop
@@ -145,6 +156,7 @@ class CropUtil(var bitmapImage: Bitmap) {
         val diffY = abs(circleThree.y - offset.y)
 
         if (diffX >= widthDiffInEdges && diffY > heightDiffInEdges && offset.y < circleThree.y && offset.x < circleTwo.x) {
+            Log.d("CROP_UTIL", "updateCircleOne: offset => $offset")
 
             this.circleOne = offset
             this.circleTwo = Offset(circleTwo.x, offset.y)
