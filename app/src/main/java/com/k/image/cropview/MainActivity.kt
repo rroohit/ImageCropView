@@ -157,9 +157,7 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         }
-
                     }
-
                 }
             }
         }

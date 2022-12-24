@@ -2,6 +2,9 @@ package com.image.cropview
 
 import android.graphics.Bitmap
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import kotlin.math.abs
@@ -38,53 +41,37 @@ class CropUtil(var bitmapImage: Bitmap) {
     /**
      *  Edge of cropping rect point at top-left
      */
-    var circleOne: Offset = Offset(0.0F, 0.0F)
-        private set(value) {
-            field = value //To set current variable circleOne value
-            updateGuidLinesOnX()
-            updateGuidLinesOnY()
-        }
+    var circleOne: Offset by mutableStateOf(Offset(0.0F, 0.0F))
+        private set
 
     /**
      *  Edge of cropping rect point at top-right
      */
-    var circleTwo: Offset = Offset(canvasWidth.toFloat(), 0.0F)
-        private set(value) {
-            field = value //To set current variable circleTwo value
-            updateGuidLinesOnX()
-            updateGuidLinesOnY()
-        }
+    var circleTwo: Offset by mutableStateOf(Offset(canvasWidth.toFloat(), 0.0F))
+        private set
 
     /**
      *  Edge of cropping rect point at bottom-left
      */
-    var circleThree: Offset = Offset(0.0F, canvasHeight.toFloat())
-        private set(value) {
-            field = value //To set current variable circleThree value
-            updateGuidLinesOnX()
-            updateGuidLinesOnY()
-        }
+    var circleThree: Offset by mutableStateOf(Offset(0.0F, canvasHeight.toFloat()))
+        private set
 
     /**
      *  Edge of cropping rect point at bottom-right
      */
-    var circleFour: Offset = Offset(canvasWidth.toFloat(), canvasHeight.toFloat())
-        private set(value) {
-            field = value //To set current variable circleFour value
-            updateGuidLinesOnX()
-            updateGuidLinesOnY()
-        }
+    var circleFour: Offset by mutableStateOf(Offset(canvasWidth.toFloat(), canvasHeight.toFloat()))
+        private set
 
     /**
      *  Grid lines in rect currently only four grid lines
      */
-    var guideLineOne: GuideLinePoints = GuideLinePoints()
+    var guideLineOne: GuideLinePoints by mutableStateOf(GuideLinePoints())
         private set
-    var guideLineTwo: GuideLinePoints = GuideLinePoints()
+    var guideLineTwo: GuideLinePoints by mutableStateOf(GuideLinePoints())
         private set
-    var guideLineThree: GuideLinePoints = GuideLinePoints()
+    var guideLineThree: GuideLinePoints by mutableStateOf(GuideLinePoints())
         private set
-    var guideLineFour: GuideLinePoints = GuideLinePoints()
+    var guideLineFour: GuideLinePoints by mutableStateOf(GuideLinePoints())
         private set
 
     /**
@@ -104,46 +91,46 @@ class CropUtil(var bitmapImage: Bitmap) {
      *
      */
     fun cropImage(): Bitmap {
-        val cropRect = getRectFromPoints()
+        val rect = getRectFromPoints()
 
-        val bitmap = Bitmap.createScaledBitmap(bitmapImage, canvasWidth, canvasHeight, true)
+        Log.d("CROP_UTIL", "updateCircleOne: rect => $rect")
 
-        //Top rect point must be >= 0
-        var imageLeft = if (cropRect.left.toInt() < 0) 0 else cropRect.left.toInt()
-        var imageTop = if (cropRect.top.toInt() < 0) 0 else cropRect.top.toInt()
 
-        //Check whether cropping bounds are within bitmap size
-        val imageWidth =
-            if (cropRect.width.toInt() > canvasWidth) canvasWidth else cropRect.width.toInt()
-        val imageHeight =
-            if (cropRect.height.toInt() > canvasHeight) canvasHeight else cropRect.height.toInt()
+        val bitmap: Bitmap = Bitmap.createScaledBitmap(bitmapImage, canvasWidth, canvasHeight, true)
 
-        //
-        if (imageLeft + imageWidth > canvasWidth) {
-            imageLeft = 0
+        var imgLef = if (rect.left.toInt() < 0) 0 else rect.left.toInt()
+        var imgTop = if (rect.top.toInt() < 0) 0 else rect.top.toInt()
+
+        val imgWidth = if (rect.width.toInt() > canvasWidth) canvasWidth else rect.width.toInt()
+        val imgHeight =
+            if (rect.height.toInt() > canvasHeight) canvasHeight else rect.height.toInt()
+
+        if (imgLef + imgWidth > canvasWidth) {
+            imgLef = 0
         }
-        //
-        if (imageTop + imageHeight > canvasHeight) {
-            imageTop = abs(canvasHeight - imageHeight)
+        if (imgTop + imgHeight > canvasHeight) {
+            imgTop = abs(canvasHeight - imgHeight)
         }
 
-        val bitmapNew = if (imageWidth <= 0 || imageHeight <= 0) {
-            bitmapImage
+        val cropBitmap = if (imgWidth <= 0 || imgHeight <= 0){
+            Bitmap.createBitmap(
+                bitmap,
+                0,
+                0,
+                canvasWidth,
+                canvasHeight
+            )
         } else {
             Bitmap.createBitmap(
                 bitmap,
-                imageLeft,
-                imageTop,
-                imageWidth,
-                imageHeight
+                imgLef,
+                imgTop,
+                imgWidth,
+                imgHeight
             )
         }
 
-        val croppedImage =
-            Bitmap.createScaledBitmap(bitmapNew, canvasWidth, canvasHeight, true)
-
-        // Crop the bitmap in size of initial crop bounds width and height...
-        return croppedImage ?: bitmapImage
+        return Bitmap.createScaledBitmap(cropBitmap, canvasWidth, canvasHeight, true)
 
     }
 
@@ -156,11 +143,13 @@ class CropUtil(var bitmapImage: Bitmap) {
         val diffY = abs(circleThree.y - offset.y)
 
         if (diffX >= widthDiffInEdges && diffY > heightDiffInEdges && offset.y < circleThree.y && offset.x < circleTwo.x) {
-            Log.d("CROP_UTIL", "updateCircleOne: offset => $offset")
 
             this.circleOne = offset
             this.circleTwo = Offset(circleTwo.x, offset.y)
             this.circleThree = Offset(offset.x, circleThree.y)
+            
+            updateGuidLinesOnX()
+            updateGuidLinesOnY()
 
         }
 
@@ -179,6 +168,9 @@ class CropUtil(var bitmapImage: Bitmap) {
             this.circleOne = Offset(circleOne.x, offset.y)
             this.circleFour = Offset(offset.x, circleFour.y)
 
+            updateGuidLinesOnX()
+            updateGuidLinesOnY()
+
         }
 
     }
@@ -195,6 +187,9 @@ class CropUtil(var bitmapImage: Bitmap) {
             this.circleThree = offset
             this.circleOne = Offset(offset.x, circleOne.y)
             this.circleFour = Offset(circleFour.x, offset.y)
+
+            updateGuidLinesOnX()
+            updateGuidLinesOnY()
 
         }
 
@@ -213,6 +208,9 @@ class CropUtil(var bitmapImage: Bitmap) {
             this.circleTwo = Offset(offset.x, circleTwo.y)
             this.circleThree = Offset(circleThree.x, offset.y)
 
+            updateGuidLinesOnX()
+            updateGuidLinesOnY()
+
         }
 
     }
@@ -221,31 +219,13 @@ class CropUtil(var bitmapImage: Bitmap) {
      *  Reset the rectangle to start from initial
      */
     fun resetCropRect() {
-        circleOne = Offset(0.0F, 0.0F)
-        circleTwo = Offset(canvasWidth.toFloat(), 0.0F)
-        circleThree = Offset(0.0F, canvasHeight.toFloat())
-        circleFour = Offset(canvasWidth.toFloat(), canvasHeight.toFloat())
+        this.circleOne = Offset(0.0F, 0.0F)
+        this.circleTwo = Offset(canvasWidth.toFloat(), 0.0F)
+        this.circleThree = Offset(0.0F, canvasHeight.toFloat())
+        this.circleFour = Offset(canvasWidth.toFloat(), canvasHeight.toFloat())
+        updateGuidLinesOnX()
+        updateGuidLinesOnY()
 
-    }
-
-    /**
-     *  Updating the grid lines in rect as edges of rect changes on Y-axis lines
-     */
-    private fun updateGuidLinesOnY() {
-        val diffInYDirectionForGuideLine =
-            sqrt((circleOne.x - circleThree.x).pow(2) + (circleOne.y - circleThree.y).pow(2)) / 3
-
-        //Update Guide Line One on Y-axis
-        guideLineOne = GuideLinePoints(
-            start = Offset(circleOne.x, circleThree.y - (diffInYDirectionForGuideLine * 2)),
-            end = Offset(circleTwo.x, circleTwo.y + diffInYDirectionForGuideLine)
-        )
-
-        //Update Guide Line Two on Y-axis
-        guideLineTwo = GuideLinePoints(
-            start = Offset(circleOne.x, circleOne.y + (diffInYDirectionForGuideLine * 2)),
-            end = Offset(circleTwo.x, circleTwo.y + (diffInYDirectionForGuideLine * 2))
-        )
     }
 
     /**
@@ -258,6 +238,9 @@ class CropUtil(var bitmapImage: Bitmap) {
         if (diffX >= widthDiffInEdges && diffY > heightDiffInEdges && offset.y <= circleThree.y) {
             this.circleOne = Offset(circleOne.x, offset.y)
             this.circleTwo = Offset(circleTwo.x, offset.y)
+
+            updateGuidLinesOnX()
+            updateGuidLinesOnY()
 
         }
 
@@ -272,6 +255,9 @@ class CropUtil(var bitmapImage: Bitmap) {
         if (diffX >= widthDiffInEdges && offset.x <= circleTwo.x) {
             this.circleOne = Offset(offset.x, circleOne.y)
             this.circleThree = Offset(offset.x, circleThree.y)
+
+            updateGuidLinesOnX()
+            updateGuidLinesOnY()
         }
 
     }
@@ -285,6 +271,9 @@ class CropUtil(var bitmapImage: Bitmap) {
         if (diffX >= widthDiffInEdges && offset.x > circleOne.x) {
             this.circleTwo = Offset(offset.x, circleTwo.y)
             this.circleFour = Offset(offset.x, circleFour.y)
+
+            updateGuidLinesOnX()
+            updateGuidLinesOnY()
         }
 
     }
@@ -298,8 +287,31 @@ class CropUtil(var bitmapImage: Bitmap) {
         if (diffY > heightDiffInEdges && offset.y > circleOne.y) {
             this.circleFour = Offset(circleFour.x, offset.y)
             this.circleThree = Offset(circleThree.x, offset.y)
+
+            updateGuidLinesOnX()
+            updateGuidLinesOnY()
         }
 
+    }
+
+    /**
+     *  Updating the grid lines in rect as edges of rect changes on Y-axis lines
+     */
+    private fun updateGuidLinesOnY() {
+        val diffInYDirectionForGuideLine =
+            sqrt((circleOne.x - circleThree.x).pow(2) + (circleOne.y - circleThree.y).pow(2)) / 3
+
+        //Update Guide Line One on Y-axis
+        this.guideLineOne = GuideLinePoints(
+            start = Offset(circleOne.x, circleThree.y - (diffInYDirectionForGuideLine * 2)),
+            end = Offset(circleTwo.x, circleTwo.y + diffInYDirectionForGuideLine)
+        )
+
+        //Update Guide Line Two on Y-axis
+        this.guideLineTwo = GuideLinePoints(
+            start = Offset(circleOne.x, circleOne.y + (diffInYDirectionForGuideLine * 2)),
+            end = Offset(circleTwo.x, circleTwo.y + (diffInYDirectionForGuideLine * 2))
+        )
     }
 
     /**
@@ -310,13 +322,13 @@ class CropUtil(var bitmapImage: Bitmap) {
             sqrt((circleOne.x - circleTwo.x).pow(2) + (circleOne.y - circleTwo.y).pow(2)) / 3
 
         //Update Guide Line One on X-axis
-        guideLineThree = GuideLinePoints(
+        this.guideLineThree = GuideLinePoints(
             start = Offset(circleOne.x + diffInXDirectionForGuideLine, circleOne.y),
             end = Offset(circleThree.x + diffInXDirectionForGuideLine, circleThree.y)
         )
 
         //Update Guide Line Two on X-axis
-        guideLineFour = GuideLinePoints(
+        this.guideLineFour = GuideLinePoints(
             start = Offset(circleOne.x + (diffInXDirectionForGuideLine * 2), circleOne.y),
             end = Offset(circleThree.x + (diffInXDirectionForGuideLine * 2), circleThree.y)
         )
@@ -331,7 +343,7 @@ class CropUtil(var bitmapImage: Bitmap) {
     //          #----------------#  right/bottom
     //                      width
     //
-    private fun getRectFromPoints(): Rect = Rect(
+    fun getRectFromPoints(): Rect = Rect(
         circleOne.x,    //left
         circleOne.y,    //top
         circleFour.x,   //right

@@ -3,7 +3,7 @@ package com.image.cropview
 import android.graphics.Bitmap
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -28,13 +28,13 @@ class ImageCrop(
     /**
      *  Initializing crop util to handle all dragging and cropping events
      */
-    private val cropUtil = CropUtil(bitmapImage)
+    private val cropU = CropUtil(bitmapImage)
 
     /**
      *  To track the rect edge which has to drag
      */
-    var selectedEdge: SelectedDraggablePoints = SelectedDraggablePoints.NULL
-        private set
+//    var selectedEdge: SelectedDraggablePoints = SelectedDraggablePoints.NULL
+//        private set
 
     /**
      *  Touch area for rect edge
@@ -50,6 +50,9 @@ class ImageCrop(
         guideLineWidth: Dp = 2.dp,
         edgeCircleSize: Dp = 8.dp,
     ) {
+        var selectedEdge by remember { mutableStateOf(SelectedDraggablePoints.NULL) }
+        val cropUtil by remember { mutableStateOf(cropU) }
+
 
         Canvas(
             modifier = modifier
@@ -220,7 +223,7 @@ class ImageCrop(
                     color = guideLineColor,
                     topLeft = cropUtil.circleOne,
                     style = Stroke(width = guideLineWidth.toPx()),
-                    size = Size(cropUtil.canvasWidth.toFloat(), cropUtil.canvasHeight.toFloat()),
+                    size = Size(cropUtil.getRectFromPoints().width, cropUtil.getRectFromPoints().height ),
                 )
 
 
@@ -267,11 +270,11 @@ class ImageCrop(
     }
 
     override fun onCrop(): Bitmap {
-        return cropUtil.cropImage()
+        return cropU.cropImage()
     }
 
     override fun resetView() {
-        cropUtil.resetCropRect()
+        cropU.resetCropRect()
     }
 
 }
