@@ -334,14 +334,15 @@ class CropUtil(var bitmapImage: Bitmap) {
         )
     }
 
+    //
     //           x
-    //left/top  #----------------#
-    //       y  |                |
-    //          |                |
-    //          |                |
-    //          |                |  height
-    //          #----------------#  right/bottom
-    //                      width
+    // left/top  #----------------#
+    //        y  |                |
+    //           |                |
+    //           |                |
+    //           |                |  height
+    //           #----------------#  right/bottom
+    //                       width
     //
     fun getRectFromPoints(): Rect = Rect(
         circleOne.x,    //left

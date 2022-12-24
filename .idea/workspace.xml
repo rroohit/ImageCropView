@@ -14,10 +14,7 @@
       <change beforePath="$PROJECT_DIR$/.gradle/7.4/fileHashes/fileHashes.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/7.4/fileHashes/fileHashes.bin" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/7.4/fileHashes/fileHashes.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/7.4/fileHashes/fileHashes.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/k/image/cropview/MainActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/k/image/cropview/MainActivity.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cropview/src/main/java/com/image/cropview/CropUtil.kt" beforeDir="false" afterPath="$PROJECT_DIR$/cropview/src/main/java/com/image/cropview/CropUtil.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cropview/src/main/java/com/image/cropview/ImageCropView.kt" beforeDir="false" afterPath="$PROJECT_DIR$/cropview/src/main/java/com/image/cropview/ImageCropView.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
