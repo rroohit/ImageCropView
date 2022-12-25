@@ -1,63 +1,59 @@
 package com.image.cropview
 
 import android.graphics.Bitmap
+import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlin.math.abs
 
 /**
  *  ImageCrop which is responsible to draw all rect and edges on bitmap
  *  @param bitmapImage Bitmap which has to cropped
  *
  */
-class ImageCrop(
-    var bitmapImage: Bitmap
+public class ImageCrop(
+    public var bitmapImage: Bitmap
 ) : OnCrop {
 
     /**
      *  Initializing crop util to handle all dragging and cropping events
      */
-    private val cropU = CropUtil(bitmapImage)
+    private lateinit var cropU: CropUtil
 
-    /**
-     *  To track the rect edge which has to drag
-     */
-//    var selectedEdge: SelectedDraggablePoints = SelectedDraggablePoints.NULL
-//        private set
 
     /**
      *  Touch area for rect edge
      */
-    val edgeTouchArea: Float
+    private val edgeTouchArea: Float
         get() = 120f
 
 
     @Composable
-    fun ImageCropView(
+    public fun ImageCropView(
         modifier: Modifier = Modifier,
         guideLineColor: Color = Color.LightGray,
         guideLineWidth: Dp = 2.dp,
         edgeCircleSize: Dp = 8.dp,
     ) {
         var selectedEdge by remember { mutableStateOf(SelectedDraggablePoints.NULL) }
-        val cropUtil by remember { mutableStateOf(cropU) }
-
+        val cropUtil by remember { mutableStateOf(CropUtil(bitmapImage)) }
+        cropU = cropUtil
 
         Canvas(
             modifier = modifier
                 .onSizeChanged {
-                    cropUtil.updateBitmapSizeChange(it.width, it.height)
+                    cropUtil.updateCanvasSizeChange(it.width, it.height)
                 }
                 .pointerInput(Unit) {
                     detectDragGestures(
@@ -90,6 +86,32 @@ class ImageCrop(
                                 onTouchPointOffset.y - cropUtil.circleFour.y > -edgeTouchArea
                             ) {
                                 selectedEdge = SelectedDraggablePoints.FOUR
+
+                            } else if (abs(onTouchPointOffset.y - cropUtil.circleOne.y) < edgeTouchArea) {
+
+                                selectedEdge = SelectedDraggablePoints.LINEONE
+
+                            } else if (abs(onTouchPointOffset.x - cropUtil.circleOne.x) < edgeTouchArea) {
+
+                                selectedEdge = SelectedDraggablePoints.LINETWO
+
+                            } else if (abs(onTouchPointOffset.x - cropUtil.circleTwo.x) < edgeTouchArea) {
+
+                                selectedEdge = SelectedDraggablePoints.LINETHREE
+
+                            } else if (abs(onTouchPointOffset.y - cropUtil.circleThree.y) < edgeTouchArea) {
+
+                                selectedEdge = SelectedDraggablePoints.LINEFOUR
+
+                            } else if (Rect(
+                                    cropUtil.getRectFromPoints().left + edgeTouchArea + 3,
+                                    cropUtil.getRectFromPoints().top + edgeTouchArea + 3,
+                                    cropUtil.getRectFromPoints().right + edgeTouchArea + 3,
+                                    cropUtil.getRectFromPoints().bottom + edgeTouchArea + 3
+                                ).contains(onTouchPointOffset)
+                            ) {
+                                selectedEdge = SelectedDraggablePoints.DRAGRECT
+                                Log.d("DRAG", "ImageCropView: drag rect $selectedEdge")
 
                             } else {
                                 selectedEdge = SelectedDraggablePoints.NULL
@@ -163,7 +185,8 @@ class ImageCrop(
                                         cropUtil.moveLineFour(moveOffset)
                                     }
                                     SelectedDraggablePoints.DRAGRECT -> {
-                                        //todo drag an rect when drag starts from rect center
+                                        Log.d("DRAG", "ImageCropView: drag offset ${pointerInputChange.position}")
+
                                     }
                                 }
 
@@ -219,16 +242,47 @@ class ImageCrop(
                 )
 
                 // Rect borders
-                drawRoundRect(
-                    color = guideLineColor,
-                    topLeft = cropUtil.circleOne,
-                    style = Stroke(width = guideLineWidth.toPx()),
-                    size = Size(cropUtil.getRectFromPoints().width, cropUtil.getRectFromPoints().height ),
-                )
-
+//                drawRoundRect(
+//                    color = guideLineColor,
+//                    topLeft = cropUtil.circleOne,
+//                    style = Stroke(width = guideLineWidth.toPx()),
+//                    size = Size(cropUtil.getRectFromPoints().width, cropUtil.getRectFromPoints().height ),
+//                )
+//
 
                 // Rect center guideLines
                 val path = Path().apply {
+
+                    //Image outlines/guidelines
+                    //1
+                    drawLine(
+                        color = guideLineColor,
+                        start = cropUtil.circleOne,
+                        end = cropUtil.circleTwo,
+                        strokeWidth = guideLineWidth.toPx()
+                    )
+                    //2
+                    drawLine(
+                        color = guideLineColor,
+                        start = cropUtil.circleOne,
+                        end = cropUtil.circleThree,
+                        strokeWidth = guideLineWidth.toPx()
+                    )
+                    //3
+                    drawLine(
+                        color = guideLineColor,
+                        start = cropUtil.circleTwo,
+                        end = cropUtil.circleFour,
+                        strokeWidth = guideLineWidth.toPx()
+                    )
+                    //4
+                    drawLine(
+                        color = guideLineColor,
+                        start = cropUtil.circleThree,
+                        end = cropUtil.circleFour,
+                        strokeWidth = guideLineWidth.toPx()
+                    )
+
 
                     // line 1
                     drawLine(
@@ -270,16 +324,16 @@ class ImageCrop(
     }
 
     override fun onCrop(): Bitmap {
-        return cropU.cropImage()
+        return this.cropU.cropImage()
     }
 
     override fun resetView() {
-        cropU.resetCropRect()
+        this.cropU.resetCropRect()
     }
 
 }
 
-interface OnCrop {
+private interface OnCrop {
     fun onCrop(): Bitmap
     fun resetView()
 

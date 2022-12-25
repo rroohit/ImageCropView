@@ -1,7 +1,15 @@
 plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
+    id 'org.jetbrains.dokka'
 }
+
+ext {
+    PUBLISH_GROUP_ID = 'com.github.rroohit'
+    PUBLISH_ARTIFACT_ID = 'ImageCropView'
+    PUBLISH_VERSION = '1.0.0'
+}
+apply from: "${rootDir}/scripts/publish-module.gradle"
 
 android {
     namespace 'com.image.cropview'
@@ -38,7 +46,19 @@ android {
         jvmTarget = '1.8'
     }
 
+    lintOptions {
+        abortOnError false
+    }
+
 }
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+    kotlinOptions.freeCompilerArgs += [
+            "-Xexplicit-api=strict",
+            "-Xopt-in=androidx.compose.ui.ExperimentalComposeUiApi"
+    ]
+}
+
 
 dependencies {
 

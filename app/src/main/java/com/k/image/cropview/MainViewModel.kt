@@ -25,7 +25,7 @@ class MainViewModel : ViewModel() {
 
     companion object {
         const val IMAGE_URL =
-            "https://images.unsplash.com/photo-1671795834340-77fce09826e3?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=387&q=80"
+            "https://images.unsplash.com/photo-1666133618839-f0e310290707?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=387&q=80"
     }
 
 
@@ -57,7 +57,7 @@ class MainViewModel : ViewModel() {
             //getting the contentResolver
             activity.contentResolver?.also { resolver ->
 
-                //Content resolver will process the contentvalues
+                //Content resolver will process the content values
                 val contentValues = ContentValues().apply {
 
                     //putting file information in content values
