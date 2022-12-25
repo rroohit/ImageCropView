@@ -5,7 +5,7 @@ plugins {
 }
 
 ext {
-    PUBLISH_GROUP_ID = 'com.github.rroohit'
+    PUBLISH_GROUP_ID = 'io.github.rroohit'
     PUBLISH_ARTIFACT_ID = 'ImageCropView'
     PUBLISH_VERSION = '1.0.0'
 }
