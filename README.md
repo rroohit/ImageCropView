@@ -22,7 +22,7 @@ First We have to create an instance of `ImageCrop(bitmap)` by passing an bitmap.
 
 Using `.ImageCropView(...)` you can customize your crop view, `.ImageCropView(...)` is jetpack compose `@Composable` function.
 
-To get cropped bitmap you have to call `.onCrop()`.
+To get cropped bitmap call `.onCrop()`.
 
 ```kotlin
 
