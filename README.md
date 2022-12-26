@@ -29,7 +29,7 @@ To get cropped bitmap call `.onCrop()`.
 private lateinit var imageCrop: ImageCrop
 imageCrop = ImageCrop(bitmap)
 
-// You can customize ImageCropView following attributes.
+// You can customize ImageCropView with following attributes.
 imageCrop.ImageCropView(
     modifier = Modifier,
     guideLineColor = Color.LightGray,
