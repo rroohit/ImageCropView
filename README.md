@@ -14,9 +14,7 @@ dependencies {
 }
 ```
 
-## Usage
-
-#### Adding Image Crop View in kotlin Jetpack Compose :
+## How to use
 
 First We have to create an instance of `ImageCrop(bitmap)` by passing an bitmap. 
 
