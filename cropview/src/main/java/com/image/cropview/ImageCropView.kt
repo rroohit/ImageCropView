@@ -23,7 +23,7 @@ import kotlin.math.abs
  *
  */
 public class ImageCrop(
-    public var bitmapImage: Bitmap
+    private var bitmapImage: Bitmap
 ) : OnCrop {
 
     /**
