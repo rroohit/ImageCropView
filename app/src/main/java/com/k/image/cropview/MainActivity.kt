@@ -82,8 +82,8 @@ class MainActivity : ComponentActivity() {
                                 imageCrop.ImageCropView(
                                     modifier = Modifier.fillMaxSize(),
                                     guideLineColor = Color.LightGray,
-                                    guideLineWidth = 2.dp,
-                                    edgeCircleSize = 5.dp
+                                    guideLineWidth = 3.dp,
+                                    edgeCircleSize = 10.dp
                                 )
 
                                 showProgressBarState.value = false
