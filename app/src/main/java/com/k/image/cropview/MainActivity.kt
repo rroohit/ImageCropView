@@ -3,27 +3,26 @@ package com.k.image.cropview
 import android.app.Activity
 import android.graphics.Bitmap
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import coil.compose.AsyncImage
-import coil.compose.SubcomposeAsyncImage
 import com.image.cropview.ImageCrop
 import com.k.image.cropview.ui.theme.ImageCropViewTheme
 import kotlinx.coroutines.flow.collectLatest
@@ -43,10 +42,10 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    val listImages = remember { mutableStateOf<List<String>>(emptyList()) }
+                    val listImages = remember { mutableStateOf<List<Bitmap>>(emptyList()) }
 
                     lifecycleScope.launchWhenStarted {
-                        viewModel.listOfImages.collectLatest { list ->
+                        viewModel.bitmaps.collectLatest { list ->
                             listImages.value = list
                         }
                     }
@@ -108,7 +107,7 @@ class MainActivity : ComponentActivity() {
                         }
 
                         //>=> >=>
-                        Spacer(modifier = Modifier.height(100.dp))
+                        Spacer(modifier = Modifier.height(80.dp))
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             Arrangement.SpaceEvenly
@@ -159,8 +158,8 @@ class MainActivity : ComponentActivity() {
                                             )
                                         )
                                     } ?: run {
-//                                        Toast.makeText(context, "Null Image", Toast.LENGTH_SHORT)
-//                                            .show()
+                                        Toast.makeText(context, "Null Image", Toast.LENGTH_SHORT)
+                                            .show()
 
                                     }
                                 }
@@ -171,28 +170,22 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(100.dp))
-
+                        Spacer(modifier = Modifier.height(16.dp))
 
                         //>=> >=>
                         LazyRow(
-                            modifier = Modifier.fillMaxSize(),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier.fillMaxSize().padding(start = 8.dp, end = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
 
-                            ) {
-//                            (1..100).forEach { intV ->
-//                                item {
-//                                    Text(text = intV.toString())
-//
-//                                }
-//                            }
                             listImages.value.forEach { image ->
-                                Log.d("IMAGE_FILE", "saveMediaToStorage: image  => $image")
 
                                 item {
 
                                     AsyncImage(
-                                        modifier = Modifier.size(20.dp, 20.dp),
+                                        modifier = Modifier.fillMaxSize(0.6F)
+                                            .clip(RoundedCornerShape(4.dp)),
                                         model = image,
                                         contentDescription = "cropped image"
                                     )
@@ -200,6 +193,9 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         }
+
+                        Spacer(modifier = Modifier.height(20.dp))
+
                     }
                 }
             }

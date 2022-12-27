@@ -9,7 +9,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
-import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -18,7 +17,6 @@ import coil.request.ImageRequest
 import coil.request.SuccessResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
@@ -27,17 +25,9 @@ import java.io.OutputStream
 
 class MainViewModel : ViewModel() {
 
+    private val _bitmaps = MutableStateFlow<List<Bitmap>>(emptyList())
+    val bitmaps: StateFlow<List<Bitmap>> = _bitmaps
 
-    private val croppedImages = MutableStateFlow<List<File>>(emptyList())
-    private val listImageUri = MutableStateFlow<List<Uri>>(emptyList())
-
-    val listOfImages = combine(croppedImages, listImageUri) { croppedImages, listImages ->
-        val list = croppedImages.map { it.absolutePath }.distinct()
-        val list2 = listImages.map { it.path }.distinct().filterNotNull()
-
-        list + list2
-
-    }
 
     companion object {
         const val IMAGE_URL =
@@ -62,6 +52,7 @@ class MainViewModel : ViewModel() {
     }
 
     private fun saveMediaToStorage(bitmap: Bitmap, activity: Activity) {
+        _bitmaps.value = bitmaps.value + bitmap
         //Generating a file name
         val filename = "${System.currentTimeMillis()}.jpg"
 
@@ -88,8 +79,6 @@ class MainViewModel : ViewModel() {
 
                 //Opening an output stream with the Uri that we got
                 fos = imageUri?.let {
-                    listImageUri.value = listImageUri.value + imageUri
-
                     resolver.openOutputStream(it)
                 }
 
@@ -102,14 +91,12 @@ class MainViewModel : ViewModel() {
             val image = File(imagesDir, filename)
             fos = FileOutputStream(image)
 
-            croppedImages.value = croppedImages.value + image
-
         }
 
         fos?.use {
-            //Finally writing the bitmap to the output stream that we opened
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, it)
-//            Toast.makeText(activity, "Image Saved", Toast.LENGTH_SHORT).show()
+
+            Toast.makeText(activity, "Image Saved", Toast.LENGTH_SHORT).show()
         }
     }
 
