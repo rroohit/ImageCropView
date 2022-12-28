@@ -37,7 +37,7 @@ imageCrop = ImageCrop(bitmap)
 
 // You can customize ImageCropView with following attributes.
 imageCrop.ImageCropView(
-    modifier = Modifier,
+    modifier = Modifier,            //must provide with size
     guideLineColor = Color.LightGray,
     guideLineWidth = 2.dp,
     edgeCircleSize = 5.dp
