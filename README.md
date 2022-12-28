@@ -3,6 +3,8 @@
 Image crop view for jetpack compose.
 
 
+https://user-images.githubusercontent.com/36406595/209850544-a7fd3c14-5cef-4aa3-8f66-fa7626c7cd06.mp4
+
 
 ## Including in your project 
 
