@@ -31,7 +31,7 @@ class MainViewModel : ViewModel() {
 
     companion object {
         const val IMAGE_URL =
-            "https://images.unsplash.com/photo-1666133618839-f0e310290707?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=387&q=80"
+            "https://images.unsplash.com/photo-1619203596659-6029850f0c73?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=387&q=80"
     }
 
 
@@ -82,7 +82,6 @@ class MainViewModel : ViewModel() {
                     resolver.openOutputStream(it)
                 }
 
-
             }
         } else {
             //These for devices running on android < Q
@@ -96,7 +95,7 @@ class MainViewModel : ViewModel() {
         fos?.use {
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, it)
 
-            Toast.makeText(activity, "Image Saved", Toast.LENGTH_SHORT).show()
+//            Toast.makeText(activity, "Image Saved", Toast.LENGTH_SHORT).show()
         }
     }
 

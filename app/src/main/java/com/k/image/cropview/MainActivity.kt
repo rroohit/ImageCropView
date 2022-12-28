@@ -7,9 +7,12 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
@@ -21,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.lifecycleScope
 import coil.compose.AsyncImage
 import com.image.cropview.ImageCrop
@@ -57,8 +61,10 @@ class MainActivity : ComponentActivity() {
                     }
 
                     val showProgressBarState = remember { mutableStateOf(true) }
+                    val showImageDialog = remember { mutableStateOf(false) }
 
                     val croppedImage = remember { mutableStateOf<Bitmap?>(null) }
+                    val selectedImage = remember { mutableStateOf<Bitmap?>(null) }
 
 
                     LaunchedEffect(true) {
@@ -107,7 +113,7 @@ class MainActivity : ComponentActivity() {
                         }
 
                         //>=> >=>
-                        Spacer(modifier = Modifier.height(80.dp))
+                        Spacer(modifier = Modifier.height(70.dp))
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             Arrangement.SpaceEvenly
@@ -174,7 +180,9 @@ class MainActivity : ComponentActivity() {
 
                         //>=> >=>
                         LazyRow(
-                            modifier = Modifier.fillMaxSize().padding(start = 8.dp, end = 8.dp),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(start = 8.dp, end = 8.dp),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -184,8 +192,13 @@ class MainActivity : ComponentActivity() {
                                 item {
 
                                     AsyncImage(
-                                        modifier = Modifier.fillMaxSize(0.6F)
-                                            .clip(RoundedCornerShape(4.dp)),
+                                        modifier = Modifier
+                                            .fillMaxSize(0.6F)
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .clickable {
+                                                selectedImage.value = image
+                                                showImageDialog.value = true
+                                            },
                                         model = image,
                                         contentDescription = "cropped image"
                                     )
@@ -197,6 +210,58 @@ class MainActivity : ComponentActivity() {
                         Spacer(modifier = Modifier.height(20.dp))
 
                     }
+
+                    // ==>
+                    if (showImageDialog.value) {
+                        Dialog(
+                            onDismissRequest = {
+                                showImageDialog.value = false
+                                selectedImage.value = null
+                            }
+                        ) {
+                            Surface(
+                                color = Color.Transparent
+                            ) {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth()
+                                            .align(Alignment.TopEnd)
+                                            .padding(top = 30.dp),
+                                        horizontalArrangement = Arrangement.End,
+
+                                    ) {
+                                        Icon(
+                                            modifier = Modifier.size(40.dp)
+                                                .clickable {
+                                                    showImageDialog.value = false
+                                                    selectedImage.value = null
+                                                },
+                                            imageVector = Icons.Rounded.Close,
+                                            tint = Color.White,
+                                            contentDescription = "close dialog"
+                                        )
+                                    }
+
+                                    AsyncImage(
+                                        modifier = Modifier
+                                            .fillMaxSize(1f)
+                                            .padding(bottom = 100.dp),
+                                        model = selectedImage.value,
+                                        contentDescription = "cropped image"
+                                    )
+
+                                }
+
+                            }
+
+
+
+                        }
+                    }
+
                 }
             }
         }
