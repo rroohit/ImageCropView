@@ -113,6 +113,7 @@ public class ImageCrop(
                                 selectedEdge = SelectedDraggablePoints.DRAGRECT
                                 Log.d("DRAG", "ImageCropView: drag rect $selectedEdge")
 
+
                             } else {
                                 selectedEdge = SelectedDraggablePoints.NULL
                             }
