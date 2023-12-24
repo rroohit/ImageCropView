@@ -28,6 +28,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.lifecycleScope
 import coil.compose.AsyncImage
 import com.image.cropview.ImageCrop
+import com.k.image.cropview.ui.ImageItem
+import com.k.image.cropview.ui.theme.Chatelle
 import com.k.image.cropview.ui.theme.ImageCropViewTheme
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -52,6 +54,7 @@ class MainActivity : ComponentActivity() {
                         viewModel.bitmaps.collectLatest { list ->
                             listImages.value = list
                         }
+
                     }
 
                     val context = LocalContext.current as Activity
@@ -99,11 +102,12 @@ class MainActivity : ComponentActivity() {
                             bitmap.value?.let { bm ->
                                 imageCrop = ImageCrop(bitmapImage = bm)
 
+
                                 imageCrop.ImageCropView(
                                     modifier = Modifier.fillMaxSize(),
-                                    guideLineColor = Color.LightGray,
-                                    guideLineWidth = 3.dp,
-                                    edgeCircleSize = 10.dp
+                                    guideLineColor = Chatelle,
+                                    guideLineWidth = 2.dp,
+                                    edgeCircleSize = 5.dp
                                 )
 
                                 showProgressBarState.value = false
@@ -187,28 +191,24 @@ class MainActivity : ComponentActivity() {
                             verticalAlignment = Alignment.CenterVertically
                         ) {
 
-                            listImages.value.forEach { image ->
-
+                            listImages.value.forEachIndexed { index, image ->
                                 item {
-
-                                    AsyncImage(
-                                        modifier = Modifier
-                                            .fillMaxSize(0.6F)
-                                            .clip(RoundedCornerShape(4.dp))
-                                            .clickable {
-                                                selectedImage.value = image
-                                                showImageDialog.value = true
-                                            },
-                                        model = image,
-                                        contentDescription = "cropped image"
+                                    ImageItem(modifier = Modifier
+                                        .fillMaxSize(0.6F)
+                                        .clip(RoundedCornerShape(4.dp)),
+                                        bitmap = image,
+                                        index = index,
+                                        onClick = {
+                                            selectedImage.value = it
+                                            showImageDialog.value = true
+                                        }
                                     )
-
                                 }
                             }
+
                         }
 
                         Spacer(modifier = Modifier.height(20.dp))
-
                     }
 
                     // ==>
@@ -225,16 +225,18 @@ class MainActivity : ComponentActivity() {
                                 Box(
                                     modifier = Modifier.fillMaxSize(),
 
-                                ) {
+                                    ) {
                                     Row(
-                                        modifier = Modifier.fillMaxWidth()
+                                        modifier = Modifier
+                                            .fillMaxWidth()
                                             .align(Alignment.TopEnd)
                                             .padding(top = 30.dp),
                                         horizontalArrangement = Arrangement.End,
 
-                                    ) {
+                                        ) {
                                         Icon(
-                                            modifier = Modifier.size(40.dp)
+                                            modifier = Modifier
+                                                .size(40.dp)
                                                 .clickable {
                                                     showImageDialog.value = false
                                                     selectedImage.value = null
@@ -256,12 +258,8 @@ class MainActivity : ComponentActivity() {
                                 }
 
                             }
-
-
-
                         }
                     }
-
                 }
             }
         }
