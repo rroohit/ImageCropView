@@ -9,42 +9,12 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="13abd5e3-ab9d-48e1-8162-3a7f069442df" name="Changes" comment="Image-Crop-View">
-      <change afterPath="$PROJECT_DIR$/app/src/main/java/com/k/image/cropview/ui/ImageItem.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/cropview/src/main/java/com/image/cropview/CanvasSize.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/cropview/src/main/java/com/image/cropview/IRect.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/cropview/src/main/java/com/image/cropview/RectEdge.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/local.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/7.4/checksums/checksums.lock" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/7.4/dependencies-accessors/dependencies-accessors.lock" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/7.4/dependencies-accessors/gc.properties" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/7.4/executionHistory/executionHistory.lock" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/7.4/fileChanges/last-build.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/7.4/fileHashes/fileHashes.bin" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/7.4/fileHashes/fileHashes.lock" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/7.4/gc.properties" beforeDir="false" />
+    <list default="true" id="13abd5e3-ab9d-48e1-8162-3a7f069442df" name="Changes" comment="release v_2.0.1&#10;added crop-rect draggable inside the crop view.">
       <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/cache.properties" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/cache.properties" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/outputFiles.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/outputFiles.bin" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/app/build.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/k/image/cropview/MainActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/k/image/cropview/MainActivity.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/k/image/cropview/MainViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/k/image/cropview/MainViewModel.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/k/image/cropview/ui/theme/Color.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/k/image/cropview/ui/theme/Color.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/buildSrc/src/main/kotlin/com/github/rroohit/imagecropview/Configuration.kt" beforeDir="false" afterPath="$PROJECT_DIR$/buildSrc/src/main/kotlin/com/github/rroohit/imagecropview/Configuration.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cropview/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/cropview/build.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cropview/src/androidTest/java/com/image/cropview/ExampleInstrumentedTest.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cropview/src/main/java/com/image/cropview/CropUtil.kt" beforeDir="false" afterPath="$PROJECT_DIR$/cropview/src/main/java/com/image/cropview/CropUtil.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cropview/src/main/java/com/image/cropview/GuideLinePoints.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cropview/src/main/java/com/image/cropview/ImageCropView.kt" beforeDir="false" afterPath="$PROJECT_DIR$/cropview/src/main/java/com/image/cropview/ImageCropView.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cropview/src/main/java/com/image/cropview/SelectedDraggablePoints.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cropview/src/test/java/com/image/cropview/ExampleUnitTest.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/gradle.properties" beforeDir="false" afterPath="$PROJECT_DIR$/gradle.properties" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.properties" beforeDir="false" afterPath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.properties" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -55,7 +25,7 @@
   <component name="ClangdSettings">
     <option name="formatViaClangd" value="false" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[7f589762]" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[/Users/rohitchavan/.android/avd/Pixel_3a_API_34_extension_level_7_arm64-v8a.avd]" />
   <component name="ExternalProjectsData">
     <projectState path="$PROJECT_DIR$">
       <ProjectState />
@@ -102,7 +72,7 @@
     "cidr.known.project.marker": "true",
     "com.android.tools.idea.devicemanager.tab": "Physical",
     "git-widget-placeholder": "master",
-    "project.structure.last.edited": "Dependencies",
+    "project.structure.last.edited": "Project",
     "project.structure.proportion": "0.17",
     "project.structure.side.proportion": "0.2",
     "settings.editor.selected.configurable": "editor.preferences.fonts.default"
@@ -369,7 +339,15 @@
       <option name="project" value="LOCAL" />
       <updated>1672248968889</updated>
     </task>
-    <option name="localTasksCounter" value="26" />
+    <task id="LOCAL-00026" summary="release v_2.0.1&#10;added crop-rect draggable inside the crop view.">
+      <option name="closed" value="true" />
+      <created>1703429058536</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1703429058536</updated>
+    </task>
+    <option name="localTasksCounter" value="27" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -388,6 +366,7 @@
       <path value="$PROJECT_DIR$" />
     </ignored-roots>
     <MESSAGE value="Image-Crop-View" />
-    <option name="LAST_COMMIT_MESSAGE" value="Image-Crop-View" />
+    <MESSAGE value="release v_2.0.1&#10;added crop-rect draggable inside the crop view." />
+    <option name="LAST_COMMIT_MESSAGE" value="release v_2.0.1&#10;added crop-rect draggable inside the crop view." />
   </component>
 </project>
