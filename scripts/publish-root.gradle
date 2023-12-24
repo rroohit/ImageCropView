@@ -25,9 +25,9 @@ if (secretPropsFile.exists()) {
 }
 
 if (snapshot) {
-    ext["rootVersionName"] = "1.0.1-SNAPSHOT"
+    ext["rootVersionName"] = "2.0.1-SNAPSHOT"
 } else {
-    ext["rootVersionName"] = "1.0.0"
+    ext["rootVersionName"] = "2.0.1"
 }
 
 // Set up Sonatype repository

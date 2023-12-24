@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
@@ -29,9 +31,14 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlin {
+        jvmToolchain(17)
     }
 
     buildFeatures {
@@ -39,23 +46,17 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.5"
+        kotlinCompilerExtensionVersion = "1.5.3"
     }
 
-    kotlinOptions {
-    }
     lint {
         abortOnError false
     }
-
-
 }
 
-tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
-    kotlinOptions.freeCompilerArgs += [
-            "-Xexplicit-api=strict",
-            "-Xopt-in=androidx.compose.ui.ExperimentalComposeUiApi"
-    ]
+tasks.withType(KotlinCompile).configureEach {
+    kotlinOptions.freeCompilerArgs += ["-Xexplicit-api=strict",
+                                       "-Xopt-in=androidx.compose.ui.ExperimentalComposeUiApi"]
 }
 
 
