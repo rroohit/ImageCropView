@@ -1,0 +1,33 @@
+apply plugin: "com.vanniktech.maven.publish"
+
+group = "io.github.rroohit"
+version = "2.1.0"
+
+mavenPublishing {
+
+    pom {
+        description = "Jetpack Compose Image Crop View."
+        inceptionYear = "2022"
+        url = "https://github.com/rroohit/ImageCropView"
+        licenses {
+            license {
+                name = "The Apache Software License, Version 2.0"
+                url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                distribution = "repo"
+            }
+        }
+        developers {
+            developer {
+                id = "rroohit"
+                name = "Rohit Chavan"
+                url = "https://github.com/rroohit/"
+            }
+        }
+        scm {
+            url = "https://github.com/rroohit/ImageCropView.git"
+            connection = "scm:git:github.com/rroohit/ImageCropView.git"
+            developerConnection = "scm:git:github.com/rroohit/ImageCropView.git"
+        }
+    }
+}
+

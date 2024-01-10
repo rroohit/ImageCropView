@@ -17,7 +17,7 @@ Add this dependency to your **module-level** `build.gradle` in `dependencies` se
 dependencies {
     //...other repositories
 
-    implementation 'io.github.rroohit:ImageCropView:1.0.0'
+    implementation 'io.github.rroohit:ImageCropView:2.1.0'
     
 }
 ```

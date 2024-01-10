@@ -3,15 +3,9 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
-    id 'org.jetbrains.dokka'
 }
 
-ext {
-    PUBLISH_GROUP_ID = 'io.github.rroohit'
-    PUBLISH_ARTIFACT_ID = 'ImageCropView'
-    PUBLISH_VERSION = '2.0.1'
-}
-apply from: "${rootDir}/scripts/publish-module.gradle"
+apply from: "${rootProject.projectDir}/publish.gradle"
 
 android {
     namespace 'com.image.cropview'
@@ -33,13 +27,17 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
     }
 
-    kotlin {
-        jvmToolchain(17)
+    kotlinOptions {
+        jvmTarget = '11'
     }
+
+    /*kotlin {
+        jvmToolchain(17)
+    }*/
 
     buildFeatures {
         compose true
@@ -48,26 +46,20 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.3"
     }
-
-    lint {
-        abortOnError false
-    }
 }
 
 tasks.withType(KotlinCompile).configureEach {
-    kotlinOptions.freeCompilerArgs += ["-Xexplicit-api=strict",
-                                       "-Xopt-in=androidx.compose.ui.ExperimentalComposeUiApi"]
+    kotlinOptions.freeCompilerArgs +=
+            ["-Xexplicit-api=strict",
+             "-Xopt-in=androidx.compose.ui.ExperimentalComposeUiApi"]
 }
 
 
-dependencies {
 
+dependencies {
     implementation 'androidx.core:core-ktx:1.12.0'
     implementation "androidx.compose.ui:ui:1.5.4"
     implementation 'androidx.compose.ui:ui-geometry:1.5.4'
     implementation "androidx.compose.foundation:foundation:1.5.4"
 
-    // testImplementation 'junit:junit:4.13.2'
-    // androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    // androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 }

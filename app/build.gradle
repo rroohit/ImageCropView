@@ -27,11 +27,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
     }
     kotlinOptions {
-        jvmTarget = '17'
+        jvmTarget = '11'
     }
     buildFeatures {
         compose true
@@ -61,8 +61,8 @@ dependencies {
     debugImplementation "androidx.compose.ui:ui-tooling:1.5.4"
     debugImplementation "androidx.compose.ui:ui-test-manifest:1.5.4"
 
-    implementation project(path: ':cropview')
-//    implementation 'io.github.rroohit:ImageCropView:1.0.0'
+//    implementation project(path: ':cropview')
+    implementation 'io.github.rroohit:ImageCropView:2.1.0'
 
     implementation('io.coil-kt:coil-compose:2.5.0')
 }
