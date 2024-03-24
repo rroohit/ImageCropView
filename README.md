@@ -2,7 +2,8 @@
 
 Image crop view for jetpack compose.
 
-https://github.com/rroohit/ImageCropView/assets/36406595/5068b7d1-f38f-4112-898e-d593018447c3
+https://github.com/rroohit/ImageCropView/assets/36406595/c92d73d9-bc7e-49d5-abaf-5acb2d59df84
+
 
 
 
