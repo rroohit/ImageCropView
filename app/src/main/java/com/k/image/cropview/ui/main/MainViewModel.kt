@@ -1,4 +1,4 @@
-package com.k.image.cropview
+package com.k.image.cropview.ui.main
 
 import android.app.Activity
 import android.content.ContentValues
@@ -14,8 +14,10 @@ import androidx.lifecycle.viewModelScope
 import coil.ImageLoader
 import coil.request.ImageRequest
 import coil.request.SuccessResult
+import com.image.cropview.CropType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
@@ -27,21 +29,32 @@ class MainViewModel : ViewModel() {
     private val _bitmaps = MutableStateFlow<List<Bitmap>>(emptyList())
     val bitmaps: StateFlow<List<Bitmap>> = _bitmaps
 
+    private val _cropType = MutableStateFlow(CropType.SQUARE)
+    val cropType get() = _cropType.asStateFlow()
 
     companion object {
         const val IMAGE_URL = "https://images.unsplash.com/photo-1628076674561-6e9a0b56f2c3?q=80&w=3387&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
     }
 
 
-    fun onEvent(events: CropEvents) {
-        when (events) {
+    fun onEvent(event: CropEvents) {
+        when (event) {
             is CropEvents.ResetCrop -> {}
             is CropEvents.SaveCroppedImage -> {
                 viewModelScope.launch {
-                    saveMediaToStorage(events.bitmap, events.activity)
+                    saveMediaToStorage(event.bitmap, event.activity)
                 }
             }
+            is CropEvents.ChangeCropType -> {
+                updateCropType(event.cropType)
+            }
             else -> Unit
+        }
+    }
+
+    private fun updateCropType(cropType: CropType) {
+        viewModelScope.launch {
+            _cropType.emit(cropType)
         }
     }
 

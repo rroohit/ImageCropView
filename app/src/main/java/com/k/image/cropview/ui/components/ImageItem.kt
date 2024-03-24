@@ -1,4 +1,4 @@
-package com.k.image.cropview.ui
+package com.k.image.cropview.ui.components
 
 import android.graphics.Bitmap
 import androidx.compose.foundation.background

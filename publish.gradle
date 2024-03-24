@@ -1,10 +1,9 @@
 apply plugin: "com.vanniktech.maven.publish"
 
 group = "io.github.rroohit"
-version = "2.1.0"
+version = "2.2.0"
 
 mavenPublishing {
-
     pom {
         description = "Jetpack Compose Image Crop View."
         inceptionYear = "2022"

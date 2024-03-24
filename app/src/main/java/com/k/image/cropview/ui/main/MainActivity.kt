@@ -1,4 +1,4 @@
-package com.k.image.cropview
+package com.k.image.cropview.ui.main
 
 import android.app.Activity
 import android.graphics.Bitmap
@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -22,13 +23,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import coil.compose.AsyncImage
+import com.image.cropview.CropType
 import com.image.cropview.ImageCrop
-import com.k.image.cropview.ui.ImageItem
+import com.k.image.cropview.R
+import com.k.image.cropview.ui.components.ImageItem
+import com.k.image.cropview.ui.components.ItemIcon
 import com.k.image.cropview.ui.theme.Chatelle
 import com.k.image.cropview.ui.theme.ImageCropViewTheme
 import kotlinx.coroutines.flow.collectLatest
@@ -43,18 +50,21 @@ class MainActivity : ComponentActivity() {
         setContent {
             val viewModel: MainViewModel by viewModels()
             ImageCropViewTheme {
-                // A surface container using the 'background' color from the theme
+
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
                     val listImages = remember { mutableStateOf<List<Bitmap>>(emptyList()) }
 
-                    lifecycleScope.launchWhenStarted {
-                        viewModel.bitmaps.collectLatest { list ->
-                            listImages.value = list
+                    LaunchedEffect(true) {
+                        lifecycleScope.launch {
+                            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                                viewModel.bitmaps.collectLatest { list ->
+                                    listImages.value = list
+                                }
+                            }
                         }
-
                     }
 
                     val context = LocalContext.current as Activity
@@ -107,7 +117,9 @@ class MainActivity : ComponentActivity() {
                                     modifier = Modifier.fillMaxSize(),
                                     guideLineColor = Chatelle,
                                     guideLineWidth = 2.dp,
-                                    edgeCircleSize = 5.dp
+                                    edgeCircleSize = 5.dp,
+                                    showGuideLines = true,
+                                    cropType = viewModel.cropType.collectAsState().value
                                 )
 
                                 showProgressBarState.value = false
@@ -117,7 +129,37 @@ class MainActivity : ComponentActivity() {
                         }
 
                         //>=> >=>
-                        Spacer(modifier = Modifier.height(70.dp))
+                        Row(
+                            modifier = Modifier
+                                .height(80.dp)
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+
+                            ItemIcon(
+                                painterResource(id = R.drawable.ratio_free_style),
+                                description = "Free Style",
+                                cropType = CropType.FREE_STYLE,
+                                currentCropType = viewModel.cropType.collectAsState().value
+                            ) {
+                                viewModel.onEvent(CropEvents.ChangeCropType(CropType.FREE_STYLE))
+                            }
+
+                            Spacer(modifier = Modifier.width(24.dp))
+
+                            ItemIcon(
+                                painter = painterResource(id = R.drawable.ratio_square),
+                                description = "Square",
+                                cropType = CropType.SQUARE,
+                                currentCropType = viewModel.cropType.collectAsState().value
+                            ) {
+                                viewModel.onEvent(CropEvents.ChangeCropType(CropType.SQUARE))
+                            }
+
+                        }
+
+                        //>=> >=>
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             Arrangement.SpaceEvenly
@@ -127,8 +169,7 @@ class MainActivity : ComponentActivity() {
                                     .height(50.dp)
                                     .weight(2F)
                                     .padding(start = 4.dp, end = 4.dp),
-                                onClick = {
-                                }
+                                onClick = {}
                             ) {
                                 Text(
                                     text = "Select Image",

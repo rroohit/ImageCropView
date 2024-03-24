@@ -28,6 +28,8 @@ import kotlin.math.min
  */
 public class CropUtil constructor(private var bitmapImage: Bitmap) {
 
+    public var cropType: CropType? = null
+
     /**
      * The canvas size of the crop view.
      */
@@ -71,7 +73,15 @@ public class CropUtil constructor(private var bitmapImage: Bitmap) {
     /**
      * The minimum limit for various calculations based on the touch rectangle padding.
      */
-    private val minLimit = paddingForTouchRect * 3F
+    private val minLimit: Float = paddingForTouchRect * 3F
+
+    private var maxSquareLimit: Float = 0F
+        set(value) {
+            minSquareLimit = value * 0.2F
+            field = value
+        }
+
+    private var minSquareLimit: Float = maxSquareLimit * 0.3F
 
     /**
      * The last point updated during drag operations.
@@ -103,14 +113,35 @@ public class CropUtil constructor(private var bitmapImage: Bitmap) {
      */
     public fun resetCropIRect() {
         // Irect resetting
-        irectTopleft = Offset(x = 0.0F, y = 0.0F)
-        iRect = IRect(
-            topLeft = irectTopleft, size = Size(
-                canvasSize.canvasWidth,
-                canvasSize.canvasHeight
-            )
-        )
+        val canWidth = canvasSize.canvasWidth
+        val canHeight = canvasSize.canvasHeight
+
+        if (getCurrCropType() == CropType.FREE_STYLE) {
+            // Free style Rect positioning
+            irectTopleft = Offset(x = 0.0F, y = 0.0F)
+            iRect = IRect(topLeft = irectTopleft, size = Size(canWidth, canHeight))
+
+        } else {
+            // Square style Rect positioning
+            val squareSize = getSquareSize(canWidth, canHeight)
+            irectTopleft = getSquarePosition(canWidth, canHeight, squareSize.width)
+            iRect = IRect(topLeft = irectTopleft, size = squareSize)
+
+        }
+
         updateTouchRect()
+    }
+
+    private fun getSquareSize(width: Float, height: Float): Size {
+        val squareSize = minOf(width, height) - 100F
+        maxSquareLimit = squareSize + 100F
+        return Size(squareSize, squareSize)
+    }
+
+    private fun getSquarePosition(width: Float, height: Float, squareSize: Float): Offset {
+        val x = (width - squareSize) / 2
+        val y = (height - squareSize) / 2
+        return Offset(x, y)
     }
 
     /**
@@ -160,18 +191,27 @@ public class CropUtil constructor(private var bitmapImage: Bitmap) {
             processIRectDrag(dragPoint = dragPoint)
         } else {
             when (rectEdgeTouched) {
-                RectEdge.TOP_LEFT -> topLeftCornerDrag(dragPoint)
+                RectEdge.TOP_LEFT -> {
+                    topLeftCornerDrag(dragPoint)
+                }
 
-                RectEdge.TOP_RIGHT -> topRightCornerDrag(dragPoint)
+                RectEdge.TOP_RIGHT -> {
+                    topRightCornerDrag(dragPoint)
+                }
 
-                RectEdge.BOTTOM_LEFT -> bottomLeftCornerDrag(dragPoint)
+                RectEdge.BOTTOM_LEFT -> {
+                    bottomLeftCornerDrag(dragPoint)
+                }
 
-                RectEdge.BOTTOM_RIGHT -> bottomRightCornerDrag(dragPoint)
+                RectEdge.BOTTOM_RIGHT -> {
+                    bottomRightCornerDrag(dragPoint)
+                }
 
                 else -> Unit
             }
         }
     }
+
 
     /**
      *  - Handles the conclusion of a drag operation, resetting state variables related to the drag.
@@ -179,6 +219,7 @@ public class CropUtil constructor(private var bitmapImage: Bitmap) {
      */
     public fun onDragEnd() { // Third event of pointer input
         isTouchedInsideRectMove = false
+        lastPointUpdated = null
         rectEdgeTouched = RectEdge.NULL
     }
 
@@ -190,8 +231,7 @@ public class CropUtil constructor(private var bitmapImage: Bitmap) {
      *  @param dragPoint The current coordinates during the drag as an [Offset].
      */
     private fun processIRectDrag(dragPoint: Offset) {
-        val topLeftDiff = dragDiffCalculation(dragPoint)
-        topLeftDiff?.let { diffOffset ->
+        dragDiffCalculation(dragPoint)?.let { diffOffset ->
             val offsetCheck = Offset(
                 x = (irectTopleft.x + diffOffset.x),
                 y = (irectTopleft.y + diffOffset.y)
@@ -245,39 +285,51 @@ public class CropUtil constructor(private var bitmapImage: Bitmap) {
      *  @param dragPoint The current coordinates during the drag as an [Offset].
      */
     private fun topLeftCornerDrag(dragPoint: Offset) {
-        if (dragPoint.x < 0 || dragPoint.y < 0) return
         dragDiffCalculation(dragPoint)?.let { dragDiff ->
-
-            val canvasWidth = canvasSize.canvasWidth
-            val canvasHeight = canvasSize.canvasHeight
+            val (canvasWidth, canvasHeight) = canvasSize
             val size = iRect.size
 
-            val topleftCopy = irectTopleft
-            var x = if ((topleftCopy.x + dragDiff.x) < 0) 0F else (topleftCopy.x + dragDiff.x)
-            var y = if ((topleftCopy.y + dragDiff.y) < 0) 0F else (topleftCopy.y + dragDiff.y)
 
-            // Limit top-left point to keep rectangle within canvas boundaries
-            x = if (x > (canvasWidth - minLimit)) (canvasWidth - minLimit) else x
-            y = if (y > (canvasHeight - minLimit)) (canvasHeight - minLimit) else y
+            val x = (0f.coerceAtLeast(irectTopleft.x + dragDiff.x))
+                .coerceAtMost(canvasWidth - minLimit)
+
+            val y = (0f.coerceAtLeast(irectTopleft.y + dragDiff.y))
+                .coerceAtMost(canvasHeight - minLimit)
+
 
             // Calculate new width and height based on drag direction
-            val newWidth = calculateNewSize(size.width, dragDiff.x, minLimit)
-            val newHeight = calculateNewSize(size.height, dragDiff.y, minLimit)
+            val newWidth = calculateNewSize(size.width, dragDiff.x)
+            val newHeight = calculateNewSize(size.height, dragDiff.y)
 
-            irectTopleft = Offset(
-                x = x,
-                y = y
-            )
+            irectTopleft = Offset(x, y)
+
+            val sizeOfIRect = when (cropType) {
+                CropType.FREE_STYLE -> {
+                    Size(
+                        width = min(newWidth, canvasWidth),
+                        height = min(newHeight, canvasHeight)
+                    )
+                }
+                else -> {
+                    val sqSide = min(newWidth, canvasWidth)
+                    val totalHeight = (sqSide + irectTopleft.y)
+                    val diff = canvasHeight - totalHeight
+                    if (diff < 0 ) {
+                        irectTopleft = irectTopleft.copy(
+                            y = (irectTopleft.y + diff)
+                        )
+                    }
+
+                    Size(width = sqSide, height = sqSide)
+                }
+            }
 
             iRect = iRect.copy(
                 topLeft = irectTopleft,
-                size = Size(
-                    min(newWidth, canvasWidth),
-                    min(newHeight, canvasHeight)
-                )
+                size = sizeOfIRect
             )
-            updateTouchRect()
 
+            updateTouchRect()
         }
     }
 
@@ -286,11 +338,10 @@ public class CropUtil constructor(private var bitmapImage: Bitmap) {
      *
      *  @param currentSize The current size of the dimension (width/height).
      *  @param dragDiff The difference in drag position.
-     *  @param minLimit The minimum limit allowed for the dimension.
      *  @return The new size for the dimension.
      */
-    private fun calculateNewSize(currentSize: Float, dragDiff: Float, minLimit: Float): Float {
-        return if (dragDiff < 0) {
+    private fun calculateNewSize(currentSize: Float, dragDiff: Float): Float {
+        return if (dragDiff < 0F) {
             // Dimension will increase
             (currentSize + abs(dragDiff))
         } else {
@@ -312,13 +363,12 @@ public class CropUtil constructor(private var bitmapImage: Bitmap) {
             if (iRect.topLeft.y <= 0F && dragDiff.y < 0F) return
 
             val size = iRect.size
-            val canvasHeight = canvasSize.canvasHeight
-            val canvasWidth = canvasSize.canvasWidth
+            val (canvasWidth, canvasHeight) = canvasSize
             val irectX = iRect.topLeft.x
             val irectY = iRect.topLeft.y
 
             // Calculate new width based on drag direction
-            val newWidth = if (dragDiff.x < 0) {
+            val newWidth = if (dragDiff.x < 0F) {
                 (size.width - abs(dragDiff.x))
             } else (size.width + abs(dragDiff.x))
 
@@ -331,7 +381,7 @@ public class CropUtil constructor(private var bitmapImage: Bitmap) {
             }
 
             // Calculate new height based on drag direction
-            var height = if (dragDiff.y <= 0) {
+            var height = if (dragDiff.y <= 0F) {
                 (size.height + abs(dragDiff.y))
             } else {
                 (size.height - abs(dragDiff.y))
@@ -340,23 +390,39 @@ public class CropUtil constructor(private var bitmapImage: Bitmap) {
             // Limit height based on canvas boundaries
             if (height > canvasHeight) height = canvasHeight
 
-
             // Calculate new y-point within canvas boundaries
             val yLimitPoint = canvasHeight - minLimit
             var yPoint = irectY + dragDiff.y
             yPoint = if (yPoint <= 0F) 0F else {
                 if (yPoint >= yLimitPoint) yLimitPoint else yPoint
             }
-
             // Update top-left point and rectangle size
             irectTopleft = irectTopleft.copy(y = yPoint)
+
+            val sizeOfIRect = when (cropType) {
+                CropType.FREE_STYLE -> {
+                    Size(width = maxOf(minLimit, width), height = maxOf(minLimit, height))
+                }
+                else -> {
+                    val sqSide = maxOf(minLimit, width)
+                    val totalHeight = (sqSide + irectTopleft.y)
+                    val diff = canvasHeight - totalHeight
+
+                    if (diff < 0 ) {
+                        irectTopleft = irectTopleft.copy(
+                            y = (irectTopleft.y + diff)
+                        )
+                    }
+                    Size(width = sqSide, height = sqSide)
+                }
+            }
+
+
             iRect = iRect.copy(
                 topLeft = irectTopleft,
-                size = Size(
-                    if (width < minLimit) minLimit else width,
-                    if (height < minLimit) minLimit else height
-                )
+                size = sizeOfIRect
             )
+
             updateTouchRect()
         }
     }
@@ -369,9 +435,8 @@ public class CropUtil constructor(private var bitmapImage: Bitmap) {
      *  @param dragPoint The current coordinates during the drag as an [Offset].
      */
     private fun bottomLeftCornerDrag(dragPoint: Offset) {
-        val dragDifference = dragDiffCalculation(dragPoint)
-
-        dragDifference?.let { dragDiff ->
+        dragDiffCalculation(dragPoint)?.let { dragDiff ->
+            val canvasHeight = canvasSize.canvasHeight
             val size = iRect.size
 
             // For Y-Axis
@@ -390,22 +455,40 @@ public class CropUtil constructor(private var bitmapImage: Bitmap) {
                 a
             }
 
+            // Update top-left point and rectangle size
+            irectTopleft = Offset(x = if (x < 0F) 0F else x, y = iRect.topLeft.y)
+
             // For Irect Width
-            var width = if (dragDiff.x < 0) {
+            var width = if (dragDiff.x < 0F) {
                 (size.width + abs(dragDiff.x))
             } else (size.width - abs(dragDiff.x))
 
             if (width >= canvasSize.canvasWidth) width = canvasSize.canvasWidth
 
-            // Update top-left point and rectangle size
-            irectTopleft = Offset(x = if (x < 0F) 0F else x, y = iRect.topLeft.y)
+            val sizeOfIRect = when (cropType) {
+                CropType.FREE_STYLE -> {
+                    Size(width = maxOf(minLimit, width), height = maxOf(minLimit, height))
+                }
+                else -> {
+                    val sqSide = maxOf(minLimit, width)
+                    val totalHeight = (sqSide + irectTopleft.y)
+                    val diff = canvasHeight - totalHeight
+
+                    if (diff < 0 ) {
+                        irectTopleft = irectTopleft.copy(
+                            y = (irectTopleft.y + diff)
+                        )
+                    }
+
+                    Size(width = sqSide, height = sqSide)
+                }
+            }
+
             iRect = iRect.copy(
                 topLeft = irectTopleft,
-                size = Size(
-                    if (width < minLimit) minLimit else width,
-                    if (height < minLimit) minLimit else height
-                )
+                size = sizeOfIRect
             )
+
             updateTouchRect()
         }
     }
@@ -418,26 +501,38 @@ public class CropUtil constructor(private var bitmapImage: Bitmap) {
      *  @param dragPoint The current coordinates during the drag as an [Offset].
      */
     private fun bottomRightCornerDrag(dragPoint: Offset) {
-        val dragDifference = dragDiffCalculation(dragPoint)
+        dragDiffCalculation(dragPoint)?.let { dragDiff ->
+            val canvasHeight = canvasSize.canvasHeight
+            val (sizeWidth, sizeHeight) = iRect.size
 
-        dragDifference?.let { dragDiff ->
-            val size = iRect.size
-            val w = (size.width + dragDiff.x)
-            val h = (size.height + dragDiff.y)
+            val newWidth = (sizeWidth + dragDiff.x)
+                .coerceAtMost(canvasSize.canvasWidth - iRect.topLeft.x)
+            val newHeight = (sizeHeight + dragDiff.y)
+                .coerceAtMost(canvasSize.canvasHeight - iRect.topLeft.y)
 
-            // Limit width and height based on canvas boundaries
-            val width =
-                if ((w + iRect.topLeft.x) > (canvasSize.canvasWidth)) (canvasSize.canvasWidth - iRect.topLeft.x) else w
-            val height =
-                if ((h + iRect.topLeft.y) > (canvasSize.canvasHeight)) (canvasSize.canvasHeight - iRect.topLeft.y) else h
+            val sizeOfIrect = when (cropType) {
+                CropType.FREE_STYLE -> {
+                    Size(
+                        width = newWidth.coerceAtLeast(minLimit),
+                        height = newHeight.coerceAtLeast(minLimit)
+                    )
+                }
+                else -> {
+                    val sqSide = minLimit.coerceAtLeast(newWidth)
+                    val totalHeight = (sqSide + irectTopleft.y)
+                    val diff = canvasHeight - totalHeight
+
+                    if (diff < 0 ) {
+                        irectTopleft = irectTopleft.copy(
+                            y = (irectTopleft.y + diff)
+                        )
+                    }
+                    Size(width = sqSide, height = sqSide)
+                }
+            }
 
             // Update rectangle size
-            iRect = iRect.copy(
-                size = Size(
-                    if (width < minLimit) minLimit else width,
-                    if (height < minLimit) minLimit else height
-                )
-            )
+            iRect = iRect.copy(topLeft = irectTopleft, size = sizeOfIrect)
             updateTouchRect()
         }
     }
@@ -636,8 +731,27 @@ public class CropUtil constructor(private var bitmapImage: Bitmap) {
             )
         }
 
-        // Scale the cropped bitmap to match the canvas size
+        if (cropType == CropType.SQUARE) {
+            // Will scale the bitmap in square shape.
+            return Bitmap.createScaledBitmap(
+                cropBitmap,
+                maxSquareLimit.toInt(),
+                maxSquareLimit.toInt(),
+                true
+            )
+        }
+
+        // Scale the cropped bitmap to match the canvas size.
         return Bitmap.createScaledBitmap(cropBitmap, canvasWidth, canvasHeight, true)
+    }
+
+    public fun updateCropType(type: CropType) {
+        cropType = type
+        resetCropIRect()
+    }
+
+    private fun getCurrCropType(): CropType {
+        return cropType ?: CropType.FREE_STYLE
     }
 
     /**

@@ -48,10 +48,16 @@ public class ImageCrop(
         guideLineColor: Color = Color.Green,
         guideLineWidth: Dp = 2.dp,
         edgeCircleSize: Dp = 8.dp,
+        showGuideLines: Boolean = true,
+        cropType: CropType = CropType.FREE_STYLE
     ) {
 
         val cropUtil by remember { mutableStateOf(CropUtil(bitmapImage)) }
         cropU = cropUtil
+
+        if (cropU.cropType == null || cropType != cropU.cropType) {
+            cropU.updateCropType(cropType)
+        }
 
         Canvas(
             modifier = modifier
@@ -98,54 +104,62 @@ public class ImageCrop(
                     style = Stroke(guideLineWidth.toPx()),
                 )
 
-                // Vertical lines
-                val verticalDiff = cropU.iRect.size.height / 3
-                drawLine(
-                    color = guideLineColor,
-                    start = Offset(cropU.iRect.topLeft.x, (cropU.iRect.topLeft.y + verticalDiff)),
-                    end = Offset(
-                        (cropU.iRect.topLeft.x + cropU.iRect.size.width),
-                        (cropU.iRect.topLeft.y + verticalDiff)
-                    ),
-                    strokeWidth = guideLineWidth.toPx(),
-                )
-                drawLine(
-                    color = guideLineColor,
-                    start = Offset(
-                        cropU.iRect.topLeft.x,
-                        (cropU.iRect.topLeft.y + (verticalDiff * 2))
-                    ),
-                    end = Offset(
-                        (cropU.iRect.topLeft.x + cropU.iRect.size.width),
-                        (cropU.iRect.topLeft.y + (verticalDiff * 2))
-                    ),
-                    strokeWidth = guideLineWidth.toPx(),
-                )
+                if (showGuideLines) {
+                    // Vertical lines
+                    val verticalDiff = cropU.iRect.size.height / 3
+                    drawLine(
+                        color = guideLineColor,
+                        start = Offset(
+                            cropU.iRect.topLeft.x,
+                            (cropU.iRect.topLeft.y + verticalDiff)
+                        ),
+                        end = Offset(
+                            (cropU.iRect.topLeft.x + cropU.iRect.size.width),
+                            (cropU.iRect.topLeft.y + verticalDiff)
+                        ),
+                        strokeWidth = guideLineWidth.toPx(),
+                    )
+                    drawLine(
+                        color = guideLineColor,
+                        start = Offset(
+                            cropU.iRect.topLeft.x,
+                            (cropU.iRect.topLeft.y + (verticalDiff * 2))
+                        ),
+                        end = Offset(
+                            (cropU.iRect.topLeft.x + cropU.iRect.size.width),
+                            (cropU.iRect.topLeft.y + (verticalDiff * 2))
+                        ),
+                        strokeWidth = guideLineWidth.toPx(),
+                    )
 
-                // Horizontal lines
-                val horizontalDiff = cropU.iRect.size.width / 3
-                drawLine(
-                    color = guideLineColor,
-                    start = Offset((cropU.iRect.topLeft.x + horizontalDiff), cropU.iRect.topLeft.y),
-                    end = Offset(
-                        (cropU.iRect.topLeft.x + horizontalDiff),
-                        (cropU.iRect.topLeft.y + cropU.iRect.size.height)
-                    ),
-                    strokeWidth = guideLineWidth.toPx(),
-                )
+                    // Horizontal lines
+                    val horizontalDiff = cropU.iRect.size.width / 3
+                    drawLine(
+                        color = guideLineColor,
+                        start = Offset(
+                            (cropU.iRect.topLeft.x + horizontalDiff),
+                            cropU.iRect.topLeft.y
+                        ),
+                        end = Offset(
+                            (cropU.iRect.topLeft.x + horizontalDiff),
+                            (cropU.iRect.topLeft.y + cropU.iRect.size.height)
+                        ),
+                        strokeWidth = guideLineWidth.toPx(),
+                    )
 
-                drawLine(
-                    color = guideLineColor,
-                    start = Offset(
-                        (cropU.iRect.topLeft.x + (horizontalDiff * 2)),
-                        cropU.iRect.topLeft.y
-                    ),
-                    end = Offset(
-                        (cropU.iRect.topLeft.x + (horizontalDiff * 2)),
-                        (cropU.iRect.topLeft.y + cropU.iRect.size.height)
-                    ),
-                    strokeWidth = guideLineWidth.toPx(),
-                )
+                    drawLine(
+                        color = guideLineColor,
+                        start = Offset(
+                            (cropU.iRect.topLeft.x + (horizontalDiff * 2)),
+                            cropU.iRect.topLeft.y
+                        ),
+                        end = Offset(
+                            (cropU.iRect.topLeft.x + (horizontalDiff * 2)),
+                            (cropU.iRect.topLeft.y + cropU.iRect.size.height)
+                        ),
+                        strokeWidth = guideLineWidth.toPx(),
+                    )
+                }
 
                 // Rect edges
                 // edge 1
