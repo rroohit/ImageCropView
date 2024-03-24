@@ -6,8 +6,6 @@ https://github.com/rroohit/ImageCropView/assets/36406595/c92d73d9-bc7e-49d5-abaf
 
 
 
-
-
 ## Including in your project 
 
 
@@ -19,7 +17,7 @@ Add this dependency to your **module-level** `build.gradle` in `dependencies` se
 dependencies {
     //...other repositories
 
-    implementation 'io.github.rroohit:ImageCropView:2.1.0'
+    implementation 'io.github.rroohit:ImageCropView:2.2.0'
     
 }
 ```
@@ -39,13 +37,18 @@ imageCrop = ImageCrop(bitmap)
 
 // You can customize ImageCropView with following attributes.
 imageCrop.ImageCropView(
-    modifier = Modifier,            //must provide with size
+    modifier = Modifier,            
     guideLineColor = Color.LightGray,
     guideLineWidth = 2.dp,
-    edgeCircleSize = 5.dp
+    edgeCircleSize = 5.dp,
+    showGuideLines = true,
+    cropType = CropType.SQUARE
 )
 
-imageCrop.onCrop() //will return the cropped bitmap.
+imageCrop.onCrop() // To get the cropped image in bitmap format.
+
+// Crop Types param avail...
+// cropType = CropType.SQUARE, CropType.FREE_STYLE
 
 ```
 
