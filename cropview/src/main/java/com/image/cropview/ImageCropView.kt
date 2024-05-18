@@ -10,9 +10,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.ClipOp
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.Dp
@@ -45,7 +50,7 @@ public class ImageCrop(
     @Composable
     public fun ImageCropView(
         modifier: Modifier = Modifier,
-        guideLineColor: Color = Color.Green,
+        guideLineColor: Color = Color(0xFFD1CBE2),
         guideLineWidth: Dp = 2.dp,
         edgeCircleSize: Dp = 8.dp,
         showGuideLines: Boolean = true,
@@ -86,7 +91,7 @@ public class ImageCrop(
                 },
 
             onDraw = {
-                // Draw or Show image on rect
+                // Draw bitmap image on rect
                 val bm =
                     Bitmap.createScaledBitmap(
                         bitmapImage,
@@ -199,6 +204,36 @@ public class ImageCrop(
                     ),
                     radius = edgeCircleSize.toPx()
                 )
+
+                // Circle
+                if (cropType == CropType.PROFILE_CIRCLE) {
+                    val circleRadius: Float = (cropU.iRect.size.width / 2)
+                    /*drawCircle(
+                        color = guideLineColor,
+                        center = Offset(
+                            cropU.iRect.topLeft.x + (circleRadius),
+                            cropU.iRect.topLeft.y + (circleRadius)
+                        ),
+                        radius = circleRadius,
+                        style = Stroke(width = guideLineWidth.toPx())
+                    )*/
+
+                    val circlePath = Path().apply {
+                        addOval(
+                            Rect(
+                               center =  Offset(
+                                    cropU.iRect.topLeft.x + (circleRadius),
+                                    cropU.iRect.topLeft.y + (circleRadius)
+                                ),
+                                radius = circleRadius - guideLineWidth.toPx()
+                            )
+                        )
+                    }
+
+                    clipPath(circlePath, clipOp = ClipOp.Difference) {
+                        drawRect(SolidColor(Color.Black.copy(alpha = 0.5f)))
+                    }
+                }
             }
         )
     }

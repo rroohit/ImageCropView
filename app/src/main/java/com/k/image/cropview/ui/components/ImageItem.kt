@@ -3,9 +3,7 @@ package com.k.image.cropview.ui.components
 import android.graphics.Bitmap
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -30,7 +28,7 @@ fun ImageItem(
 ) {
     Box(
         modifier = modifier,
-        contentAlignment = Alignment.Center
+        //contentAlignment = Alignment.Center
     ) {
         AsyncImage(
             modifier = Modifier
@@ -42,10 +40,10 @@ fun ImageItem(
             contentDescription = "cropped image"
         )
 
-        Row(
-            modifier = Modifier.fillMaxSize().padding(start = 60.dp),
-            verticalAlignment = Alignment.Bottom,
-            horizontalArrangement = Arrangement.End
+        Box(
+            modifier = Modifier.fillMaxSize()
+                .padding(start = 4.dp, bottom = 2.dp),
+            contentAlignment = Alignment.BottomEnd
         ) {
             Text(
                 modifier = Modifier

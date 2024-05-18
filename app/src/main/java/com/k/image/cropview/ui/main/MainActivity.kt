@@ -8,12 +8,28 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
@@ -24,7 +40,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.Lifecycle
@@ -112,13 +127,12 @@ class MainActivity : ComponentActivity() {
                             bitmap.value?.let { bm ->
                                 imageCrop = ImageCrop(bitmapImage = bm)
 
-
                                 imageCrop.ImageCropView(
                                     modifier = Modifier.fillMaxSize(),
                                     guideLineColor = Chatelle,
                                     guideLineWidth = 2.dp,
-                                    edgeCircleSize = 5.dp,
-                                    showGuideLines = true,
+                                    edgeCircleSize = 3.dp,
+                                    showGuideLines = viewModel.cropType.collectAsState().value != CropType.PROFILE_CIRCLE,
                                     cropType = viewModel.cropType.collectAsState().value
                                 )
 
@@ -157,6 +171,17 @@ class MainActivity : ComponentActivity() {
                                 viewModel.onEvent(CropEvents.ChangeCropType(CropType.SQUARE))
                             }
 
+                            Spacer(modifier = Modifier.width(24.dp))
+
+                            ItemIcon(
+                                painter = painterResource(id = R.drawable.ratio_profile_crop),
+                                description = "ProfileCircle",
+                                cropType = CropType.PROFILE_CIRCLE,
+                                currentCropType = viewModel.cropType.collectAsState().value
+                            ) {
+                                viewModel.onEvent(CropEvents.ChangeCropType(CropType.PROFILE_CIRCLE))
+                            }
+
                         }
 
                         //>=> >=>
@@ -164,7 +189,7 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier.fillMaxWidth(),
                             Arrangement.SpaceEvenly
                         ) {
-                            Button(
+                            /*Button(
                                 modifier = Modifier
                                     .height(50.dp)
                                     .weight(2F)
@@ -177,13 +202,13 @@ class MainActivity : ComponentActivity() {
                                     overflow = TextOverflow.Ellipsis
 
                                 )
-                            }
+                            }*/
 
                             Button(
                                 modifier = Modifier
-                                    .height(50.dp)
+                                    .height(48.dp)
                                     .weight(2F)
-                                    .padding(start = 4.dp, end = 4.dp),
+                                    .padding(start = 12.dp, end = 12.dp),
                                 onClick = {
                                     imageCrop.resetView()
                                 }
@@ -195,9 +220,9 @@ class MainActivity : ComponentActivity() {
 
                             Button(
                                 modifier = Modifier
-                                    .height(50.dp)
+                                    .height(48.dp)
                                     .weight(2F)
-                                    .padding(start = 4.dp, end = 4.dp),
+                                    .padding(start = 12.dp, end = 12.dp),
                                 onClick = {
                                     val b = imageCrop.onCrop()
                                     croppedImage.value = b
@@ -215,9 +240,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                             ) {
-                                Text(
-                                    text = "Save"
-                                )
+                                Text(text = "CropImage")
                             }
                         }
 
@@ -261,12 +284,16 @@ class MainActivity : ComponentActivity() {
                             }
                         ) {
                             Surface(
-                                color = Color.Transparent
+                                color = Color.Transparent,
                             ) {
                                 Box(
-                                    modifier = Modifier.fillMaxSize(),
-
-                                    ) {
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clickable {
+                                            showImageDialog.value = false
+                                            selectedImage.value = null
+                                        }
+                                ) {
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -295,9 +322,7 @@ class MainActivity : ComponentActivity() {
                                         model = selectedImage.value,
                                         contentDescription = "cropped image"
                                     )
-
                                 }
-
                             }
                         }
                     }

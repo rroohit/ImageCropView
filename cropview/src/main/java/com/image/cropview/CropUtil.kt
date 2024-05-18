@@ -116,17 +116,18 @@ public class CropUtil constructor(private var bitmapImage: Bitmap) {
         val canWidth = canvasSize.canvasWidth
         val canHeight = canvasSize.canvasHeight
 
-        if (getCurrCropType() == CropType.FREE_STYLE) {
-            // Free style Rect positioning
-            irectTopleft = Offset(x = 0.0F, y = 0.0F)
-            iRect = IRect(topLeft = irectTopleft, size = Size(canWidth, canHeight))
-
-        } else {
+        if (getCurrCropType() == CropType.SQUARE ||
+            getCurrCropType() == CropType.PROFILE_CIRCLE
+        ) {
             // Square style Rect positioning
             val squareSize = getSquareSize(canWidth, canHeight)
             irectTopleft = getSquarePosition(canWidth, canHeight, squareSize.width)
             iRect = IRect(topLeft = irectTopleft, size = squareSize)
 
+        } else { // For free style crop
+            // Free style Rect positioning
+            irectTopleft = Offset(x = 0.0F, y = 0.0F)
+            iRect = IRect(topLeft = irectTopleft, size = Size(canWidth, canHeight))
         }
 
         updateTouchRect()
@@ -304,23 +305,23 @@ public class CropUtil constructor(private var bitmapImage: Bitmap) {
             irectTopleft = Offset(x, y)
 
             val sizeOfIRect = when (cropType) {
-                CropType.FREE_STYLE -> {
-                    Size(
-                        width = min(newWidth, canvasWidth),
-                        height = min(newHeight, canvasHeight)
-                    )
-                }
-                else -> {
+                CropType.PROFILE_CIRCLE, CropType.SQUARE -> {
                     val sqSide = min(newWidth, canvasWidth)
                     val totalHeight = (sqSide + irectTopleft.y)
                     val diff = canvasHeight - totalHeight
-                    if (diff < 0 ) {
+                    if (diff < 0) {
                         irectTopleft = irectTopleft.copy(
                             y = (irectTopleft.y + diff)
                         )
                     }
 
                     Size(width = sqSide, height = sqSide)
+                }
+                else -> { // Free style
+                    Size(
+                        width = min(newWidth, canvasWidth),
+                        height = min(newHeight, canvasHeight)
+                    )
                 }
             }
 
@@ -400,20 +401,20 @@ public class CropUtil constructor(private var bitmapImage: Bitmap) {
             irectTopleft = irectTopleft.copy(y = yPoint)
 
             val sizeOfIRect = when (cropType) {
-                CropType.FREE_STYLE -> {
-                    Size(width = maxOf(minLimit, width), height = maxOf(minLimit, height))
-                }
-                else -> {
+                CropType.PROFILE_CIRCLE, CropType.SQUARE -> {
                     val sqSide = maxOf(minLimit, width)
                     val totalHeight = (sqSide + irectTopleft.y)
                     val diff = canvasHeight - totalHeight
 
-                    if (diff < 0 ) {
+                    if (diff < 0) {
                         irectTopleft = irectTopleft.copy(
                             y = (irectTopleft.y + diff)
                         )
                     }
                     Size(width = sqSide, height = sqSide)
+                }
+                else -> { // Free style
+                    Size(width = maxOf(minLimit, width), height = maxOf(minLimit, height))
                 }
             }
 
@@ -466,15 +467,12 @@ public class CropUtil constructor(private var bitmapImage: Bitmap) {
             if (width >= canvasSize.canvasWidth) width = canvasSize.canvasWidth
 
             val sizeOfIRect = when (cropType) {
-                CropType.FREE_STYLE -> {
-                    Size(width = maxOf(minLimit, width), height = maxOf(minLimit, height))
-                }
-                else -> {
+                CropType.PROFILE_CIRCLE, CropType.SQUARE -> {
                     val sqSide = maxOf(minLimit, width)
                     val totalHeight = (sqSide + irectTopleft.y)
                     val diff = canvasHeight - totalHeight
 
-                    if (diff < 0 ) {
+                    if (diff < 0) {
                         irectTopleft = irectTopleft.copy(
                             y = (irectTopleft.y + diff)
                         )
@@ -482,6 +480,10 @@ public class CropUtil constructor(private var bitmapImage: Bitmap) {
 
                     Size(width = sqSide, height = sqSide)
                 }
+                else -> { // Free style
+                    Size(width = maxOf(minLimit, width), height = maxOf(minLimit, height))
+                }
+
             }
 
             iRect = iRect.copy(
@@ -511,23 +513,23 @@ public class CropUtil constructor(private var bitmapImage: Bitmap) {
                 .coerceAtMost(canvasSize.canvasHeight - iRect.topLeft.y)
 
             val sizeOfIrect = when (cropType) {
-                CropType.FREE_STYLE -> {
-                    Size(
-                        width = newWidth.coerceAtLeast(minLimit),
-                        height = newHeight.coerceAtLeast(minLimit)
-                    )
-                }
-                else -> {
+                CropType.PROFILE_CIRCLE, CropType.SQUARE -> {
                     val sqSide = minLimit.coerceAtLeast(newWidth)
                     val totalHeight = (sqSide + irectTopleft.y)
                     val diff = canvasHeight - totalHeight
 
-                    if (diff < 0 ) {
+                    if (diff < 0) {
                         irectTopleft = irectTopleft.copy(
                             y = (irectTopleft.y + diff)
                         )
                     }
                     Size(width = sqSide, height = sqSide)
+                }
+                else -> { // Free style
+                    Size(
+                        width = newWidth.coerceAtLeast(minLimit),
+                        height = newHeight.coerceAtLeast(minLimit)
+                    )
                 }
             }
 
@@ -731,7 +733,7 @@ public class CropUtil constructor(private var bitmapImage: Bitmap) {
             )
         }
 
-        if (cropType == CropType.SQUARE) {
+        if (cropType == CropType.SQUARE || cropType == CropType.PROFILE_CIRCLE) {
             // Will scale the bitmap in square shape.
             return Bitmap.createScaledBitmap(
                 cropBitmap,

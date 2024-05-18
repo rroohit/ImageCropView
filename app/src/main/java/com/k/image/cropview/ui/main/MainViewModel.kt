@@ -29,11 +29,12 @@ class MainViewModel : ViewModel() {
     private val _bitmaps = MutableStateFlow<List<Bitmap>>(emptyList())
     val bitmaps: StateFlow<List<Bitmap>> = _bitmaps
 
-    private val _cropType = MutableStateFlow(CropType.SQUARE)
+    private val _cropType = MutableStateFlow(CropType.PROFILE_CIRCLE)
     val cropType get() = _cropType.asStateFlow()
 
     companion object {
-        const val IMAGE_URL = "https://images.unsplash.com/photo-1628076674561-6e9a0b56f2c3?q=80&w=3387&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        const val IMAGE_URL =
+            "https://images.unsplash.com/photo-1698417386582-5e7a652254f5?q=80&w=2859&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
     }
 
 
@@ -45,9 +46,11 @@ class MainViewModel : ViewModel() {
                     saveMediaToStorage(event.bitmap, event.activity)
                 }
             }
+
             is CropEvents.ChangeCropType -> {
                 updateCropType(event.cropType)
             }
+
             else -> Unit
         }
     }

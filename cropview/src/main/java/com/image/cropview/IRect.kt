@@ -11,5 +11,5 @@ import androidx.compose.ui.geometry.Size
  */
 public data class IRect(
     val topLeft: Offset = Offset(0.0f, 0.0f),
-    var  size: Size = Size(0.0f, 0.0f)
+    var size: Size = Size(0.0f, 0.0f)
 )

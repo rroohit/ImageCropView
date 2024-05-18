@@ -50,7 +50,7 @@ fun ItemIcon(
                     .size(8.dp)
                     .background(
                         brush = Brush.radialGradient(
-                            listOf(Color(0xFF10F019), Color(0x834CAF50))
+                            listOf(Color(0xFFC148DA), Color(0x83B07CC5))
                         ),
                         shape = CircleShape
                     )

@@ -48,8 +48,8 @@ imageCrop.ImageCropView(
 
 imageCrop.onCrop() // To get the cropped image in bitmap format.
 
-// Crop Types param avail...
-// cropType = CropType.SQUARE, CropType.FREE_STYLE
+// Crop Types avail...
+// cropType = CropType.SQUARE, CropType.PROFILE_CIRCLE
 
 ```
 
