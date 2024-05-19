@@ -1,12 +1,18 @@
-# Jetpack-Compose ImageCropView
+# Jetpack Compose ImageCropView
 
-Image crop view for jetpack compose.
+Image crop view for jetpack compose applications.
+
+ImageCropView(`@Composable`) is a Jetpack Compose library for easy and customizable image cropping view in Android apps. 
+
+
+It supports various cropping styles like free-form, square, and circular cropping for profile pictures, making it simple to integrate cropping functionality into your Compose UI.
+
 
 https://github.com/rroohit/ImageCropView/assets/36406595/c92d73d9-bc7e-49d5-abaf-5acb2d59df84
 
 
 
-## Including in your project 
+## Add in your project 
 
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.rroohit/ImageCropView/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.github.rroohit/ImageCropView)
@@ -15,14 +21,11 @@ Add this dependency to your **module-level** `build.gradle` in `dependencies` se
 
 ```groovy
 dependencies {
-    //...other repositories
-
-    implementation 'io.github.rroohit:ImageCropView:2.2.0'
-    
+    implementation 'io.github.rroohit:ImageCropView:2.3.0'
 }
 ```
 
-## How to use
+## Using the ImageCropView 
 
 First We have to create an instance of `ImageCrop(bitmap)` by passing an bitmap. 
 
@@ -49,7 +52,10 @@ imageCrop.ImageCropView(
 imageCrop.onCrop() // To get the cropped image in bitmap format.
 
 // Crop Types avail...
-// cropType = CropType.SQUARE, CropType.PROFILE_CIRCLE
+// 1 - CropType.FREE_STYLE
+// 2 - CropType.SQUARE 
+// 3 - CropType.PROFILE_CIRCLE
+
 
 ```
 
