@@ -8,7 +8,7 @@ ImageCropView(`@Composable`) is a Jetpack Compose library for easy and customiza
 It supports various cropping styles like free-form, square, and circular cropping for profile pictures, making it simple to integrate cropping functionality into your Compose UI.
 
 
-https://github.com/rroohit/ImageCropView/assets/36406595/c92d73d9-bc7e-49d5-abaf-5acb2d59df84
+https://github.com/rroohit/ImageCropView/assets/36406595/d856d353-ab62-42c5-83db-ea99f8b4e8d8
 
 
 
