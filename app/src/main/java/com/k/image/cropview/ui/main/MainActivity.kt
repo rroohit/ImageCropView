@@ -47,11 +47,12 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import coil.compose.AsyncImage
 import com.image.cropview.CropType
+import com.image.cropview.EdgeType
 import com.image.cropview.ImageCrop
 import com.k.image.cropview.R
 import com.k.image.cropview.ui.components.ImageItem
 import com.k.image.cropview.ui.components.ItemIcon
-import com.k.image.cropview.ui.theme.Chatelle
+import com.k.image.cropview.ui.theme.Chatelle2
 import com.k.image.cropview.ui.theme.ImageCropViewTheme
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -126,20 +127,19 @@ class MainActivity : ComponentActivity() {
 
                             bitmap.value?.let { bm ->
                                 imageCrop = ImageCrop(bitmapImage = bm)
-
                                 imageCrop.ImageCropView(
                                     modifier = Modifier.fillMaxSize(),
-                                    guideLineColor = Chatelle,
-                                    guideLineWidth = 2.dp,
+                                    guideLineColor = Chatelle2,
+                                    guideLineWidth = 1.5.dp,
                                     edgeCircleSize = 3.dp,
                                     showGuideLines = viewModel.cropType.collectAsState().value != CropType.PROFILE_CIRCLE,
-                                    cropType = viewModel.cropType.collectAsState().value
+                                    // showGuideLines = true,
+                                    cropType = viewModel.cropType.collectAsState().value,
+                                    edgeType = EdgeType.SQUARE
                                 )
 
                                 showProgressBarState.value = false
-
                             }
-
                         }
 
                         //>=> >=>

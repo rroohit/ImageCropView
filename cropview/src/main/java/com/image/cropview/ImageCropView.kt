@@ -15,8 +15,6 @@ import androidx.compose.ui.graphics.ClipOp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
@@ -54,7 +52,8 @@ public class ImageCrop(
         guideLineWidth: Dp = 2.dp,
         edgeCircleSize: Dp = 8.dp,
         showGuideLines: Boolean = true,
-        cropType: CropType = CropType.FREE_STYLE
+        cropType: CropType = CropType.FREE_STYLE,
+        edgeType: EdgeType = EdgeType.CIRCULAR
     ) {
 
         val cropUtil by remember { mutableStateOf(CropUtil(bitmapImage)) }
@@ -74,7 +73,6 @@ public class ImageCrop(
                     detectDragGestures(
                         onDragStart = { touchPoint ->
                             cropUtil.onDragStart(touchPoint)
-
                         },
                         onDrag = { pointerInputChange, _ ->
                             // consume the drag points and update the rect
@@ -82,7 +80,6 @@ public class ImageCrop(
 
                             val dragPoint = pointerInputChange.position
                             cropUtil.onDrag(dragPoint)
-
                         },
                         onDragEnd = {
                             cropU.onDragEnd()
@@ -92,136 +89,18 @@ public class ImageCrop(
 
             onDraw = {
                 // Draw bitmap image on rect
-                val bm =
-                    Bitmap.createScaledBitmap(
-                        bitmapImage,
-                        cropUtil.canvasSize.canvasWidth.toInt(),
-                        cropUtil.canvasSize.canvasHeight.toInt(),
-                        false
-                    )
-                drawImage(image = bm.asImageBitmap())
-
-                // Actual rect
-                drawRect(
-                    color = guideLineColor,
-                    size = cropU.iRect.size,
-                    topLeft = cropU.iRect.topLeft,
-                    style = Stroke(guideLineWidth.toPx()),
-                )
-
-                if (showGuideLines) {
-                    // Vertical lines
-                    val verticalDiff = cropU.iRect.size.height / 3
-                    drawLine(
-                        color = guideLineColor,
-                        start = Offset(
-                            cropU.iRect.topLeft.x,
-                            (cropU.iRect.topLeft.y + verticalDiff)
-                        ),
-                        end = Offset(
-                            (cropU.iRect.topLeft.x + cropU.iRect.size.width),
-                            (cropU.iRect.topLeft.y + verticalDiff)
-                        ),
-                        strokeWidth = guideLineWidth.toPx(),
-                    )
-                    drawLine(
-                        color = guideLineColor,
-                        start = Offset(
-                            cropU.iRect.topLeft.x,
-                            (cropU.iRect.topLeft.y + (verticalDiff * 2))
-                        ),
-                        end = Offset(
-                            (cropU.iRect.topLeft.x + cropU.iRect.size.width),
-                            (cropU.iRect.topLeft.y + (verticalDiff * 2))
-                        ),
-                        strokeWidth = guideLineWidth.toPx(),
-                    )
-
-                    // Horizontal lines
-                    val horizontalDiff = cropU.iRect.size.width / 3
-                    drawLine(
-                        color = guideLineColor,
-                        start = Offset(
-                            (cropU.iRect.topLeft.x + horizontalDiff),
-                            cropU.iRect.topLeft.y
-                        ),
-                        end = Offset(
-                            (cropU.iRect.topLeft.x + horizontalDiff),
-                            (cropU.iRect.topLeft.y + cropU.iRect.size.height)
-                        ),
-                        strokeWidth = guideLineWidth.toPx(),
-                    )
-
-                    drawLine(
-                        color = guideLineColor,
-                        start = Offset(
-                            (cropU.iRect.topLeft.x + (horizontalDiff * 2)),
-                            cropU.iRect.topLeft.y
-                        ),
-                        end = Offset(
-                            (cropU.iRect.topLeft.x + (horizontalDiff * 2)),
-                            (cropU.iRect.topLeft.y + cropU.iRect.size.height)
-                        ),
-                        strokeWidth = guideLineWidth.toPx(),
-                    )
-                }
-
-                // Rect edges
-                // edge 1
-                drawCircle(
-                    color = guideLineColor,
-                    center = cropU.iRect.topLeft,
-                    radius = edgeCircleSize.toPx()
-                )
-
-                // edge 2
-                drawCircle(
-                    color = guideLineColor,
-                    center = Offset(
-                        (cropU.iRect.topLeft.x + cropU.iRect.size.width),
-                        cropU.iRect.topLeft.y
-                    ),
-                    radius = edgeCircleSize.toPx()
-                )
-
-
-                // edge 3
-                drawCircle(
-                    color = guideLineColor,
-                    center = Offset(
-                        cropU.iRect.topLeft.x,
-                        (cropU.iRect.topLeft.y + cropU.iRect.size.height)
-                    ),
-                    radius = edgeCircleSize.toPx()
-                )
-
-                // edge 4
-                drawCircle(
-                    color = guideLineColor,
-                    center = Offset(
-                        (cropU.iRect.topLeft.x + cropU.iRect.size.width),
-                        (cropU.iRect.topLeft.y + cropU.iRect.size.height)
-                    ),
-                    radius = edgeCircleSize.toPx()
+                drawBitmap(
+                    bitmap = bitmapImage,
+                    canvasSize = cropUtil.canvasSize
                 )
 
                 // Circle
                 if (cropType == CropType.PROFILE_CIRCLE) {
                     val circleRadius: Float = (cropU.iRect.size.width / 2)
-                    /*drawCircle(
-                        color = guideLineColor,
-                        center = Offset(
-                            cropU.iRect.topLeft.x + (circleRadius),
-                            cropU.iRect.topLeft.y + (circleRadius)
-                        ),
-                        radius = circleRadius,
-                        style = Stroke(width = guideLineWidth.toPx())
-                    )*/
-
                     val circlePath = Path().apply {
                         addOval(
                             Rect(
-                               center =  Offset(
+                                center = Offset(
                                     cropU.iRect.topLeft.x + (circleRadius),
                                     cropU.iRect.topLeft.y + (circleRadius)
                                 ),
@@ -234,10 +113,40 @@ public class ImageCrop(
                         drawRect(SolidColor(Color.Black.copy(alpha = 0.5f)))
                     }
                 }
+
+                // Actual crop view rect
+                drawCropRectangleView(
+                    guideLineColor = guideLineColor,
+                    guideLineWidth = guideLineWidth,
+                    iRect = cropU.iRect
+                )
+
+                if (showGuideLines) {
+                    drawGuideLines(
+                        noOfGuideLines = 2,
+                        guideLineColor = guideLineColor,
+                        guideLineWidth = guideLineWidth,
+                        iRect = cropU.iRect
+                    )
+                }
+
+                // Circular edges of crop rect corner
+                if (edgeType == EdgeType.CIRCULAR) {
+                    drawCircularEdges(
+                        edgeCircleSize = edgeCircleSize,
+                        guideLineColor = guideLineColor,
+                        iRect = cropU.iRect
+                    )
+                } else if (edgeType == EdgeType.SQUARE) {
+                    drawSquareBrackets(
+                        guideLineColor = guideLineColor,
+                        guideLineWidthGiven = guideLineWidth,
+                        iRect = cropU.iRect
+                    )
+                }
             }
         )
     }
-
 
     /**
      * Implements the [OnCrop] interface method to perform cropping and return the resulting [Bitmap].
