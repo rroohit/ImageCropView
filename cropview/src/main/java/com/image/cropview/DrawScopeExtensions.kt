@@ -11,7 +11,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import kotlin.math.abs
 
-
 // Scale given bitmap to given canvas size and draw the scaled bitmap on canvas draw scope
 public fun DrawScope.drawBitmap(bitmap: Bitmap, canvasSize: CanvasSize) {
     val mBitmap = Bitmap.createScaledBitmap(
@@ -182,29 +181,30 @@ public fun DrawScope.drawSquareBrackets(
 
     // Centers
     val xHorizontalCenter = (topLeft.x + (iRect.horizontalGuidelineDiff(1)))
+    val halfLineLength = (lineLength / 2F) + strokeWidth
     drawLine(
-        start = Offset(xHorizontalCenter - lineLength , yTopLine),
-        end = Offset(xHorizontalCenter + lineLength, yTopLine),
+        start = Offset(xHorizontalCenter - halfLineLength, yTopLine),
+        end = Offset(xHorizontalCenter + halfLineLength, yTopLine),
         color = guideLineColor,
         strokeWidth = strokeWidth,
     )
     drawLine(
-        start = Offset(xHorizontalCenter - lineLength , yBottomLine),
-        end = Offset(xHorizontalCenter + lineLength, yBottomLine),
+        start = Offset(xHorizontalCenter - halfLineLength, yBottomLine),
+        end = Offset(xHorizontalCenter + halfLineLength, yBottomLine),
         color = guideLineColor,
         strokeWidth = strokeWidth,
     )
 
     val xVerticalCenter = (topLeft.y + (iRect.verticalGuidelineDiff(1)))
     drawLine(
-        start = Offset(xLeftLine , xVerticalCenter - lineLength),
-        end = Offset(xLeftLine, xVerticalCenter + lineLength),
+        start = Offset(xLeftLine, xVerticalCenter - halfLineLength),
+        end = Offset(xLeftLine, xVerticalCenter + halfLineLength),
         color = guideLineColor,
         strokeWidth = strokeWidth,
     )
     drawLine(
-        start = Offset(xRightLine , xVerticalCenter - lineLength),
-        end = Offset(xRightLine, xVerticalCenter + lineLength),
+        start = Offset(xRightLine, xVerticalCenter - halfLineLength),
+        end = Offset(xRightLine, xVerticalCenter + halfLineLength),
         color = guideLineColor,
         strokeWidth = strokeWidth,
     )

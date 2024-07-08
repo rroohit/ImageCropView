@@ -9,17 +9,10 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="13abd5e3-ab9d-48e1-8162-3a7f069442df" name="Changes" comment="Documentation Update">
-      <change afterPath="$PROJECT_DIR$/cropview/src/main/java/com/image/cropview/DrawScopeExtensions.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/cropview/src/main/java/com/image/cropview/EdgeType.kt" afterDir="false" />
+    <list default="true" id="13abd5e3-ab9d-48e1-8162-3a7f069442df" name="Changes" comment="New Feature Updates">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/app/build.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/k/image/cropview/ui/main/MainActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/k/image/cropview/ui/main/MainActivity.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/k/image/cropview/ui/main/MainViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/k/image/cropview/ui/main/MainViewModel.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/k/image/cropview/ui/theme/Color.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/k/image/cropview/ui/theme/Color.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cropview/src/main/java/com/image/cropview/IRect.kt" beforeDir="false" afterPath="$PROJECT_DIR$/cropview/src/main/java/com/image/cropview/IRect.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cropview/src/main/java/com/image/cropview/DrawScopeExtensions.kt" beforeDir="false" afterPath="$PROJECT_DIR$/cropview/src/main/java/com/image/cropview/DrawScopeExtensions.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cropview/src/main/java/com/image/cropview/ImageCropView.kt" beforeDir="false" afterPath="$PROJECT_DIR$/cropview/src/main/java/com/image/cropview/ImageCropView.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cropview/src/main/java/com/image/cropview/RectEdge.kt" beforeDir="false" afterPath="$PROJECT_DIR$/cropview/src/main/java/com/image/cropview/RectEdge.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -29,7 +22,7 @@
   <component name="ClangdSettings">
     <option name="formatViaClangd" value="false" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[DeviceId(pluginId=PhysicalDevice, isTemplate=false, identifier=serial=7f589762)]" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[DeviceId(pluginId=LocalEmulator, isTemplate=false, identifier=path=/Users/rohitchavan/.android/avd/Pixel_3a_API_34_extension_level_7_arm64-v8a.avd)]" />
   <component name="ExternalProjectsData">
     <projectState path="$PROJECT_DIR$">
       <ProjectState />
@@ -484,7 +477,15 @@
       <option name="project" value="LOCAL" />
       <updated>1716100737265</updated>
     </task>
-    <option name="localTasksCounter" value="36" />
+    <task id="LOCAL-00036" summary="New Feature Updates">
+      <option name="closed" value="true" />
+      <created>1720338632364</created>
+      <option name="number" value="00036" />
+      <option name="presentableId" value="LOCAL-00036" />
+      <option name="project" value="LOCAL" />
+      <updated>1720338632364</updated>
+    </task>
+    <option name="localTasksCounter" value="37" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -509,6 +510,7 @@
     <MESSAGE value="document update" />
     <MESSAGE value="New CropType added - Profile Circle.&#10; - For cropping the image specifically for user profile view added and circular overlay and circle shape for cropping." />
     <MESSAGE value="Documentation Update" />
-    <option name="LAST_COMMIT_MESSAGE" value="Documentation Update" />
+    <MESSAGE value="New Feature Updates" />
+    <option name="LAST_COMMIT_MESSAGE" value="New Feature Updates" />
   </component>
 </project>

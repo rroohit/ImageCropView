@@ -43,7 +43,10 @@ public class ImageCrop(
      *  @param modifier The modifier for configuring the layout and appearance of the crop view.
      *  @param guideLineColor The color of guide lines and rectangles in the crop view.
      *  @param guideLineWidth The width of guide lines in the crop view.
-     *  @param edgeCircleSize The size of circular markers at the edges and corners of the crop rectangle.
+     *  @param edgeCircleSize The size of circular markers the crop rectangle.
+     *  @param showGuideLines Handle the visibility of the guidelines.
+     *  @param cropType [CropType]
+     *  @param edgeType [EdgeType]
      */
     @Composable
     public fun ImageCropView(
@@ -137,7 +140,7 @@ public class ImageCrop(
                         guideLineColor = guideLineColor,
                         iRect = cropU.iRect
                     )
-                } else if (edgeType == EdgeType.SQUARE) {
+                } else {
                     drawSquareBrackets(
                         guideLineColor = guideLineColor,
                         guideLineWidthGiven = guideLineWidth,
