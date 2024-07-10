@@ -1,18 +1,15 @@
 # Jetpack Compose ImageCropView
 
-Image crop view for jetpack compose applications.
 
-ImageCropView(`@Composable`) is a Jetpack Compose library for easy and customizable image cropping view in Android apps. 
+ImageCropView is a Jetpack Compose library that provides a simple and customizable image cropping view for Android applications.
 
-
-It supports various cropping styles like free-form, square, and circular cropping for profile pictures, making it simple to integrate cropping functionality into your Compose UI.
+It supports various cropping styles such as free-form, square, and circular cropping, making it easy to integrate image cropping functionality into your Compose UI.
 
 
 https://github.com/rroohit/ImageCropView/assets/36406595/d856d353-ab62-42c5-83db-ea99f8b4e8d8
 
 
-
-## Add in your project 
+## Setup
 
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.rroohit/ImageCropView/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.github.rroohit/ImageCropView)
@@ -25,9 +22,9 @@ dependencies {
 }
 ```
 
-## Using the ImageCropView 
+## Usage
 
-First We have to create an instance of `ImageCrop(bitmap)` by passing an bitmap. 
+Create an instance of `ImageCrop(bitmap)` by passing an bitmap. 
 
 Using `.ImageCropView(...)` you can customize your crop view.
 `.ImageCropView(...)` is jetpack compose `@Composable` function.
@@ -39,25 +36,29 @@ To get cropped bitmap invoke `.onCrop()`.
 private lateinit var imageCrop: ImageCrop
 imageCrop = ImageCrop(bitmap)
 
-// You can customize ImageCropView with following attributes.
+// Configure ImageCropView. 
 imageCrop.ImageCropView(
     modifier = Modifier,            
     guideLineColor = Color.LightGray,
     guideLineWidth = 2.dp,
     edgeCircleSize = 5.dp,
     showGuideLines = true,
-    cropType = CropType.SQUARE
+    cropType = CropType.SQUARE,
+    edgeType = EdgeType.CIRCULAR
 )
 
-imageCrop.onCrop() // To get the cropped image in bitmap format.
-
-// Crop Types avail...
-// 1 - CropType.FREE_STYLE
-// 2 - CropType.SQUARE 
-// 3 - CropType.PROFILE_CIRCLE
-
+val croppedBitmap = imageCrop.onCrop() // To get the cropped image in bitmap format.
 
 ```
+
+## Crop Types
+
+| Crop Type          | Description                        |
+|--------------------|------------------------------------|
+| **FREE_STYLE**     | Free-form cropping                 |
+| **SQUARE**         | Square cropping                    |
+| **PROFILE_CIRCLE** | Circular View for profile pictures |
+
 
 
 ### License

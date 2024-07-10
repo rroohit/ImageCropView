@@ -9,10 +9,9 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="13abd5e3-ab9d-48e1-8162-3a7f069442df" name="Changes" comment="New Feature Updates">
+    <list default="true" id="13abd5e3-ab9d-48e1-8162-3a7f069442df" name="Changes" comment="Documentation update">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gradle.properties" beforeDir="false" afterPath="$PROJECT_DIR$/gradle.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/publish.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/publish.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -22,7 +21,7 @@
   <component name="ClangdSettings">
     <option name="formatViaClangd" value="false" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[DeviceId(pluginId=PhysicalDevice, isTemplate=false, identifier=serial=7f589762)]" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[DeviceId(pluginId=LocalEmulator, isTemplate=false, identifier=path=/Users/rohitchavan/.android/avd/Pixel_3a_API_34_extension_level_7_arm64-v8a.avd)]" />
   <component name="ExternalProjectsData">
     <projectState path="$PROJECT_DIR$">
       <ProjectState />
@@ -123,7 +122,7 @@
     &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
     &quot;project.structure.proportion&quot;: &quot;0.17&quot;,
     &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;emulator&quot;
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;
   },
   &quot;keyToStringList&quot;: {
     &quot;kotlin-gradle-user-dirs&quot;: [
@@ -493,7 +492,15 @@
       <option name="project" value="LOCAL" />
       <updated>1720464393651</updated>
     </task>
-    <option name="localTasksCounter" value="38" />
+    <task id="LOCAL-00038" summary="Documentation update">
+      <option name="closed" value="true" />
+      <created>1720624786323</created>
+      <option name="number" value="00038" />
+      <option name="presentableId" value="LOCAL-00038" />
+      <option name="project" value="LOCAL" />
+      <updated>1720624786323</updated>
+    </task>
+    <option name="localTasksCounter" value="39" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -519,6 +526,7 @@
     <MESSAGE value="New CropType added - Profile Circle.&#10; - For cropping the image specifically for user profile view added and circular overlay and circle shape for cropping." />
     <MESSAGE value="Documentation Update" />
     <MESSAGE value="New Feature Updates" />
-    <option name="LAST_COMMIT_MESSAGE" value="New Feature Updates" />
+    <MESSAGE value="Documentation update" />
+    <option name="LAST_COMMIT_MESSAGE" value="Documentation update" />
   </component>
 </project>
