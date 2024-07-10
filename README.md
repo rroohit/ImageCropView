@@ -6,7 +6,7 @@ ImageCropView is a Jetpack Compose library that provides a simple and customizab
 It supports various cropping styles such as free-form, square, and circular cropping, making it easy to integrate image cropping functionality into your Compose UI.
 
 
-https://github.com/rroohit/ImageCropView/assets/36406595/d856d353-ab62-42c5-83db-ea99f8b4e8d8
+https://github.com/rroohit/ImageCropView/assets/36406595/92906b61-277a-4bd6-a814-e3573ae36ee3
 
 
 ## Setup
