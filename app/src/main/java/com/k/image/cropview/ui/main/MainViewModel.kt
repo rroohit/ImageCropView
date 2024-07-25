@@ -34,8 +34,7 @@ class MainViewModel : ViewModel() {
 
     companion object {
         const val IMAGE_URL =
-            "https://images.unsplash.com/photo-1572782252655-9c8771392601?q=80&w=2112&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-        //"https://images.unsplash.com/photo-1698417386582-5e7a652254f5?q=80&w=2859&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTqYclGdTITnebvplFZ86xIQBY4tsCkYowwaQ&s"
     }
 
 

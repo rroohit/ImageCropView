@@ -70,7 +70,7 @@ public class ImageCrop(
             modifier = modifier
                 .fillMaxSize()
                 .onSizeChanged { intSize ->
-                    cropUtil.onCanvasSizeChanged(intSize = intSize)
+                    cropUtil.onCanvasSizeChanged(intSize)
                 }
                 .pointerInput(Unit) {
                     detectDragGestures(
@@ -91,10 +91,36 @@ public class ImageCrop(
                 },
 
             onDraw = {
+                // Canvas size
+                val canvasWidth = size.width
+                val canvasHeight = size.height
+
+                // Bitmap dimensions
+                val imageWidth = bitmapImage.width.toFloat()
+                val imageHeight = bitmapImage.height.toFloat()
+
+                // Aspect ratios
+                val imageAspectRatio = imageWidth / imageHeight
+                val canvasAspectRatio = canvasWidth / canvasHeight
+
+                // Determine the scaling factors
+                val scaledWidth: Float
+                val scaledHeight: Float
+
+                if (imageAspectRatio > canvasAspectRatio) {
+                    // Fit by width
+                    scaledWidth = canvasWidth
+                    scaledHeight = canvasWidth / imageAspectRatio
+                } else {
+                    // Fit by height
+                    scaledWidth = canvasHeight * imageAspectRatio
+                    scaledHeight = canvasHeight
+                }
+
                 // Draw bitmap image on rect
                 drawBitmap(
                     bitmap = bitmapImage,
-                    canvasSize = cropUtil.canvasSize
+                    canvasSize = CanvasSize(scaledWidth, scaledHeight),
                 )
 
                 // Circle
@@ -113,7 +139,7 @@ public class ImageCrop(
                     }
 
                     clipPath(circlePath, clipOp = ClipOp.Difference) {
-                        drawRect(SolidColor(Color.Black.copy(alpha = 0.5f)))
+                        drawRect(SolidColor(Color.Black.copy(alpha = 0.2f)))
                     }
                 }
 
