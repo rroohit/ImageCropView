@@ -34,7 +34,10 @@ class MainViewModel : ViewModel() {
 
     companion object {
         const val IMAGE_URL =
-            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTqYclGdTITnebvplFZ86xIQBY4tsCkYowwaQ&s"
+//            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTqYclGdTITnebvplFZ86xIQBY4tsCkYowwaQ&s"
+//        "https://d3nx71g9uvfl9m.cloudfront.net/image_db/f79e1140-acc3-11ec-be3c-0242c0a84003.png"
+//        "https://e0.pxfuel.com/wallpapers/351/703/desktop-wallpaper-fluid-abstract-space-atmosphere-world-planets-space.jpg"
+        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_IjTvDCsLIL9dsnw832sBkIG3DpkxMg-XFQ&s"
     }
 
 

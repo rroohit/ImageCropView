@@ -704,15 +704,21 @@ public class CropUtil constructor(private var bitmapImage: Bitmap) {
         // Determine the scaling factors
         val scaledWidth: Float
         val scaledHeight: Float
+        val dx: Float
+        val dy: Float
 
         if (imageAspectRatio > canvasAspectRatio) {
             // Fit by width
             scaledWidth = canvasWidth.toFloat()
             scaledHeight = canvasWidth / imageAspectRatio
+            dx = 0f
+            dy = (canvasHeight - scaledHeight) / 2f
         } else {
             // Fit by height
             scaledWidth = canvasHeight * imageAspectRatio
             scaledHeight = canvasHeight.toFloat()
+            dx = (canvasWidth - scaledWidth) / 2f
+            dy = 0f
         }
 
         // Get the rectangle bounds to crop
@@ -722,38 +728,20 @@ public class CropUtil constructor(private var bitmapImage: Bitmap) {
         val bitmap: Bitmap = Bitmap.createScaledBitmap(bitmapImage, scaledWidth.toInt(), scaledHeight.toInt(), true)
 
         // Calculate the cropped region bounds within the scaled bitmap.
-        var imgLef = if (rect.left.toInt() < 0) 0 else rect.left.toInt()
-        var imgTop = if (rect.top.toInt() < 0) 0 else rect.top.toInt()
+        val imgLef = (rect.left - dx).coerceAtLeast(0f).toInt()
+        val imgTop = (rect.top - dy).coerceAtLeast(0f).toInt()
 
-        val imgWidth = if (rect.width.toInt() > canvasWidth) canvasWidth else rect.width.toInt()
-        val imgHeight = if (rect.height.toInt() > canvasHeight) canvasHeight else rect.height.toInt()
+        val imgWidth = (rect.width + dx).coerceAtMost(canvasWidth.toFloat()).toInt()
+        val imgHeight = (rect.height + dy).coerceAtMost(canvasHeight.toFloat()).toInt()
 
         // Adjust bounds to ensure they fit within the canvas size.
-        if (imgLef + imgWidth > canvasWidth) {
-            imgLef = 0
-        }
-        if (imgTop + imgHeight > canvasHeight) {
-            imgTop = abs(canvasHeight - imgHeight)
-        }
-
-        // Create the cropped bitmap.
-        val cropBitmap = if (imgWidth <= 0 || imgHeight <= 0) {
-            Bitmap.createBitmap(
-                bitmap,
-                0,
-                0,
-                canvasWidth,
-                canvasHeight
-            )
-        } else {
-            Bitmap.createBitmap(
-                bitmap,
-                imgLef,
-                imgTop,
-                imgWidth,
-                imgHeight
-            )
-        }
+        val cropBitmap = Bitmap.createBitmap(
+            bitmap,
+            imgLef,
+            imgTop,
+            imgWidth.coerceAtMost(bitmap.width - imgLef),
+            imgHeight.coerceAtMost(bitmap.height - imgTop)
+        )
 
         return when (cropType) {
             CropType.SQUARE, CropType.PROFILE_CIRCLE -> {
