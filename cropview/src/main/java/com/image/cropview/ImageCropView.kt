@@ -157,6 +157,7 @@ public class ImageCrop(
      * @return The cropped [Bitmap] based on the current crop view configuration.
      */
     override fun onCrop(): Bitmap {
+        this.cropU.updateBitmapImage(bitmapImage)
         return this.cropU.cropImage()
     }
 

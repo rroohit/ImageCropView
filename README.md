@@ -59,8 +59,6 @@ val croppedBitmap = imageCrop.onCrop() // To get the cropped image in bitmap for
 | **SQUARE**         | Square cropping                    |
 | **PROFILE_CIRCLE** | Circular View for profile pictures |
 
-
-
 ### License
 
 ```
