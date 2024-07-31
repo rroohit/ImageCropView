@@ -29,17 +29,19 @@ class MainViewModel : ViewModel() {
     private val _bitmaps = MutableStateFlow<List<Bitmap>>(emptyList())
     val bitmaps: StateFlow<List<Bitmap>> = _bitmaps
 
+    private val _currImage = MutableStateFlow<Bitmap?>(null)
+    val currImage: StateFlow<Bitmap?> = _currImage
+
     private val _cropType = MutableStateFlow(CropType.PROFILE_CIRCLE)
     val cropType get() = _cropType.asStateFlow()
 
     companion object {
-        const val IMAGE_URL =
-//            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTqYclGdTITnebvplFZ86xIQBY4tsCkYowwaQ&s"
-//        "https://d3nx71g9uvfl9m.cloudfront.net/image_db/f79e1140-acc3-11ec-be3c-0242c0a84003.png"
-//        "https://e0.pxfuel.com/wallpapers/351/703/desktop-wallpaper-fluid-abstract-space-atmosphere-world-planets-space.jpg"
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_IjTvDCsLIL9dsnw832sBkIG3DpkxMg-XFQ&s"
-    }
-
+    private var lastUrl = ""
+    val imageUrls = listOf(
+        "https://images.unsplash.com/photo-1572782252655-9c8771392601?q=80&w=2112&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        "https://images.unsplash.com/photo-1698417386582-5e7a652254f5?q=80&w=2859&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        "https://images.unsplash.com/photo-1641369330370-28260e386e0f?q=80&w=3387&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+    )
 
     fun onEvent(event: CropEvents) {
         when (event) {
@@ -111,10 +113,19 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    suspend fun getBitmap(context: Context): Bitmap? {
+
+    fun getBitmapFromUrl(context: Context) {
+        viewModelScope.launch {
+            lastUrl = getRandomUrl()
+            val bm = getBitmap(context, lastUrl)
+            _currImage.value = bm
+        }
+    }
+
+    private suspend fun getBitmap(context: Context, imageUrl: String): Bitmap? {
         val loading = ImageLoader(context)
         val request = ImageRequest.Builder(context)
-            .data(IMAGE_URL)
+            .data(imageUrl)
             .build()
 
         val result = (loading.execute(request) as SuccessResult).drawable
@@ -122,5 +133,12 @@ class MainViewModel : ViewModel() {
         return (result as BitmapDrawable).bitmap
     }
 
+    private fun getRandomUrl(): String {
+        var newUrl = imageUrls.random()
+        while (newUrl == lastUrl) {
+            newUrl = imageUrls.random()
+        }
+        return newUrl
+    }
 
 }

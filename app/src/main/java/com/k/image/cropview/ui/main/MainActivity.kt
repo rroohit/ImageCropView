@@ -40,6 +40,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.Lifecycle
@@ -66,6 +67,12 @@ class MainActivity : ComponentActivity() {
         setContent {
             val viewModel: MainViewModel by viewModels()
             ImageCropViewTheme {
+                val context = LocalContext.current as Activity
+                val showProgressBarState = remember { mutableStateOf(true) }
+                val showImageDialog = remember { mutableStateOf(false) }
+                val croppedImage = remember { mutableStateOf<Bitmap?>(null) }
+                val selectedImage = remember { mutableStateOf<Bitmap?>(null) }
+                viewModel.getBitmapFromUrl(context)
 
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -83,25 +90,20 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
-                    val context = LocalContext.current as Activity
-
                     val bitmap = remember {
                         mutableStateOf<Bitmap?>(null)
                     }
 
-                    val showProgressBarState = remember { mutableStateOf(true) }
-                    val showImageDialog = remember { mutableStateOf(false) }
-
-                    val croppedImage = remember { mutableStateOf<Bitmap?>(null) }
-                    val selectedImage = remember { mutableStateOf<Bitmap?>(null) }
-
-
                     LaunchedEffect(true) {
-                        launch {
-                            bitmap.value = viewModel.getBitmap(context)
-
+                        lifecycleScope.launch {
+                            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                                viewModel.currImage.collectLatest { curImage ->
+                                    bitmap.value = curImage
+                                }
+                            }
                         }
                     }
+
 
                     Column(
                         modifier = Modifier.fillMaxSize(),
@@ -189,20 +191,24 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier.fillMaxWidth(),
                             Arrangement.SpaceEvenly
                         ) {
-                            /*Button(
+                            Button(
                                 modifier = Modifier
                                     .height(50.dp)
                                     .weight(2F)
                                     .padding(start = 4.dp, end = 4.dp),
-                                onClick = {}
+                                onClick = {
+                                    showProgressBarState.value = true
+                                    imageCrop.resetView()
+                                    viewModel.getBitmapFromUrl(context)
+                                }
                             ) {
                                 Text(
-                                    text = "Select Image",
+                                    text = "Change Image",
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
 
                                 )
-                            }*/
+                            }
 
                             Button(
                                 modifier = Modifier

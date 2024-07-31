@@ -18,7 +18,7 @@ Add this dependency to your **module-level** `build.gradle` in `dependencies` se
 
 ```groovy
 dependencies {
-    implementation 'io.github.rroohit:ImageCropView:3.0.0'
+    implementation 'io.github.rroohit:ImageCropView:3.0.1'
 }
 ```
 
@@ -58,8 +58,6 @@ val croppedBitmap = imageCrop.onCrop() // To get the cropped image in bitmap for
 | **FREE_STYLE**     | Free-form cropping                 |
 | **SQUARE**         | Square cropping                    |
 | **PROFILE_CIRCLE** | Circular View for profile pictures |
-
-
 
 ### License
 
