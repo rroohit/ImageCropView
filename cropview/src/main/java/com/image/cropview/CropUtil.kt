@@ -34,7 +34,8 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
     /**
      * The canvas size of the crop view.
      */
-    public var canvasSize: CanvasSize by mutableStateOf(CanvasSize())
+    public var canvasSize: CanvasSize by mutableStateOf(
+        CanvasSize(0f, 0f))
 
     /**
      * The internal rectangle (iRect) representing the region to be cropped.
@@ -697,61 +698,66 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
         val canvasWidth = canvasSize.canvasWidth.toInt()
         val canvasHeight = canvasSize.canvasHeight.toInt()
 
+        // Bitmap dimensions
+        val imageWidth = bitmapImage.width.toFloat()
+        val imageHeight = bitmapImage.height.toFloat()
+
+        // Aspect ratios
+        val imageAspectRatio = imageWidth / imageHeight
+        val canvasAspectRatio = canvasWidth / canvasHeight
+
+        // Determine the scaling factors
+        val scaledWidth: Float
+        val scaledHeight: Float
+        val dx: Float
+        val dy: Float
+
+        if (imageAspectRatio > canvasAspectRatio) {
+            // Fit by width
+            scaledWidth = canvasWidth.toFloat()
+            scaledHeight = canvasWidth / imageAspectRatio
+            dx = 0f
+            dy = (canvasHeight - scaledHeight) / 2f
+        } else {
+            // Fit by height
+            scaledWidth = canvasHeight * imageAspectRatio
+            scaledHeight = canvasHeight.toFloat()
+            dx = (canvasWidth - scaledWidth) / 2f
+            dy = 0f
+        }
+
         // Get the rectangle bounds to crop
         val rect = getRectFromPoints()
 
         // Create a scaled bitmap from the original image
+        // val bitmap: Bitmap = Bitmap.createScaledBitmap(bitmapImage, scaledWidth.toInt(), scaledHeight.toInt(), true)
         val bitmap: Bitmap = bitmapImage?.let {
                 Bitmap.createScaledBitmap(it, canvasWidth, canvasHeight, true)
             } ?: Bitmap.createScaledBitmap(mBitmapImage, canvasWidth, canvasHeight, true)
 
         // Calculate the cropped region bounds within the scaled bitmap.
-        var imgLef = if (rect.left.toInt() < 0) 0 else rect.left.toInt()
-        var imgTop = if (rect.top.toInt() < 0) 0 else rect.top.toInt()
+        val imgLef = (rect.left - dx).coerceAtLeast(0f).toInt()
+        val imgTop = (rect.top - dy).coerceAtLeast(0f).toInt()
 
-        val imgWidth = if (rect.width.toInt() > canvasWidth) canvasWidth else rect.width.toInt()
-        val imgHeight =
-            if (rect.height.toInt() > canvasHeight) canvasHeight else rect.height.toInt()
+        val imgWidth = (rect.width + dx).coerceAtMost(canvasWidth.toFloat()).toInt()
+        val imgHeight = (rect.height + dy).coerceAtMost(canvasHeight.toFloat()).toInt()
 
         // Adjust bounds to ensure they fit within the canvas size.
-        if (imgLef + imgWidth > canvasWidth) {
-            imgLef = 0
-        }
-        if (imgTop + imgHeight > canvasHeight) {
-            imgTop = abs(canvasHeight - imgHeight)
-        }
+        val cropBitmap = Bitmap.createBitmap(
+            bitmap,
+            imgLef,
+            imgTop,
+            imgWidth.coerceAtMost(bitmap.width - imgLef),
+            imgHeight.coerceAtMost(bitmap.height - imgTop)
+        )
 
-        // Create the cropped bitmap.
-        val cropBitmap = if (imgWidth <= 0 || imgHeight <= 0) {
-            Bitmap.createBitmap(
-                bitmap,
-                0,
-                0,
-                canvasWidth,
-                canvasHeight
-            )
-        } else {
-            Bitmap.createBitmap(
-                bitmap,
-                imgLef,
-                imgTop,
-                imgWidth,
-                imgHeight
-            )
+        return when (cropType) {
+            CropType.SQUARE, CropType.PROFILE_CIRCLE -> {
+                val size = minOf(maxSquareLimit.toInt(), imgWidth, imgHeight)
+                Bitmap.createScaledBitmap(cropBitmap, size, size, true)
+            }
+            else -> cropBitmap
         }
-
-        if (cropType == CropType.SQUARE || cropType == CropType.PROFILE_CIRCLE) {
-            // Will scale the bitmap in square shape.
-            return Bitmap.createScaledBitmap(
-                cropBitmap,
-                maxSquareLimit.toInt(),
-                maxSquareLimit.toInt(),
-                true
-            )
-        }
-
-        // Scale the cropped bitmap to match the canvas size.
-        return Bitmap.createScaledBitmap(cropBitmap, canvasWidth, canvasHeight, true)
     }
 
     public fun updateCropType(type: CropType) {
@@ -784,5 +790,4 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
             bottom,            //bottom
         )
     }
-
 }

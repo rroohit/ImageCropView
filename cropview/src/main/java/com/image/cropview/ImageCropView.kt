@@ -1,6 +1,8 @@
 package com.image.cropview
 
 import android.graphics.Bitmap
+import android.graphics.Paint
+import android.graphics.RectF
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,11 +13,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.ClipOp
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.Dp
@@ -70,7 +70,7 @@ public class ImageCrop(
             modifier = modifier
                 .fillMaxSize()
                 .onSizeChanged { intSize ->
-                    cropUtil.onCanvasSizeChanged(intSize = intSize)
+                    cropUtil.onCanvasSizeChanged(intSize)
                 }
                 .pointerInput(Unit) {
                     detectDragGestures(
@@ -91,11 +91,48 @@ public class ImageCrop(
                 },
 
             onDraw = {
+                // Canvas size
+                val canvasWidth = size.width
+                val canvasHeight = size.height
+
+                // Bitmap dimensions
+                val imageWidth = bitmapImage.width.toFloat()
+                val imageHeight = bitmapImage.height.toFloat()
+
+                // Aspect ratios
+                val imageAspectRatio = imageWidth / imageHeight
+                val canvasAspectRatio = canvasWidth / canvasHeight
+
+                // Determine the scaling factors
+                val scaledWidth: Float
+                val scaledHeight: Float
+                val dx: Float
+                val dy: Float
+
+                if (imageAspectRatio > canvasAspectRatio) {
+                    // Fit by width
+                    scaledWidth = canvasWidth
+                    scaledHeight = canvasWidth / imageAspectRatio
+                    dx = 0f
+                    dy = (canvasHeight - scaledHeight) / 2f
+                } else {
+                    // Fit by height
+                    scaledWidth = canvasHeight * imageAspectRatio
+                    scaledHeight = canvasHeight
+                    dx = (canvasWidth - scaledWidth) / 2f
+                    dy = 0f
+                }
+
                 // Draw bitmap image on rect
-                drawBitmap(
-                    bitmap = bitmapImage,
-                    canvasSize = cropUtil.canvasSize
-                )
+                drawIntoCanvas { canvas ->
+                    val paint = Paint()
+                    canvas.nativeCanvas.drawBitmap(
+                        bitmapImage,
+                        null,
+                        RectF(dx, dy, dx + scaledWidth, dy + scaledHeight),
+                        paint
+                    )
+                }
 
                 // Circle
                 if (cropType == CropType.PROFILE_CIRCLE) {
@@ -113,7 +150,7 @@ public class ImageCrop(
                     }
 
                     clipPath(circlePath, clipOp = ClipOp.Difference) {
-                        drawRect(SolidColor(Color.Black.copy(alpha = 0.5f)))
+                        drawRect(SolidColor(Color.Black.copy(alpha = 0.2f)))
                     }
                 }
 
