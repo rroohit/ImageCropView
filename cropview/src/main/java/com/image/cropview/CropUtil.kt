@@ -699,8 +699,8 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
         val canvasHeight = canvasSize.canvasHeight.toInt()
 
         // Bitmap dimensions
-        val imageWidth = bitmapImage.width.toFloat()
-        val imageHeight = bitmapImage.height.toFloat()
+        val imageWidth = bitmapImage!!.width.toFloat()
+        val imageHeight = bitmapImage!!.height.toFloat()
 
         // Aspect ratios
         val imageAspectRatio = imageWidth / imageHeight

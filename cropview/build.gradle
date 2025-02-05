@@ -5,8 +5,6 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
-apply from: "${rootProject.projectDir}/publish.gradle"
-
 android {
     namespace 'com.image.cropview'
     compileSdk 34
@@ -44,7 +42,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.3"
+        kotlinCompilerExtensionVersion = "1.5.8"
     }
 }
 
