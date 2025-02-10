@@ -32,7 +32,7 @@ class MainViewModel : ViewModel() {
     private val _currImage = MutableStateFlow<Bitmap?>(null)
     val currImage: StateFlow<Bitmap?> = _currImage
 
-    private val _cropType = MutableStateFlow(CropType.PROFILE_CIRCLE)
+    private val _cropType = MutableStateFlow(CropType.FREE_STYLE)
     val cropType get() = _cropType.asStateFlow()
 
 

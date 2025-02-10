@@ -187,15 +187,16 @@ class MainActivity : ComponentActivity() {
                         }
 
                         //>=> >=>
+                        // Buttons
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            Arrangement.SpaceEvenly
+                            horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
                             Button(
                                 modifier = Modifier
-                                    .height(50.dp)
+                                    .height(40.dp)
                                     .weight(2F)
-                                    .padding(start = 4.dp, end = 4.dp),
+                                    .padding(start = 2.dp, end = 2.dp),
                                 onClick = {
                                     showProgressBarState.value = true
                                     imageCrop.resetView()
@@ -206,29 +207,30 @@ class MainActivity : ComponentActivity() {
                                     text = "Change Image",
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
-
                                 )
                             }
 
                             Button(
                                 modifier = Modifier
-                                    .height(48.dp)
+                                    .height(40.dp)
                                     .weight(2F)
-                                    .padding(start = 12.dp, end = 12.dp),
+                                    .padding(start = 2.dp, end = 2.dp),
                                 onClick = {
                                     imageCrop.resetView()
                                 }
                             ) {
                                 Text(
-                                    text = "Reset"
+                                    text = "Reset",
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
 
                             Button(
                                 modifier = Modifier
-                                    .height(48.dp)
+                                    .height(40.dp)
                                     .weight(2F)
-                                    .padding(start = 12.dp, end = 12.dp),
+                                    .padding(start = 2.dp, end = 2.dp),
                                 onClick = {
                                     val b = imageCrop.onCrop()
                                     croppedImage.value = b
@@ -246,13 +248,18 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                             ) {
-                                Text(text = "CropImage")
+                                Text(
+                                    text = "CropImage",
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
                             }
                         }
 
                         Spacer(modifier = Modifier.height(16.dp))
 
                         //>=> >=>
+                        // Cropped images
                         LazyRow(
                             modifier = Modifier
                                 .fillMaxSize()
