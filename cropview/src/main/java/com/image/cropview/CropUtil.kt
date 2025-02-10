@@ -702,8 +702,8 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
 
         // Create a scaled bitmap from the original image
         val bitmap: Bitmap = bitmapImage?.let {
-                Bitmap.createScaledBitmap(it, canvasWidth, canvasHeight, true)
-            } ?: Bitmap.createScaledBitmap(mBitmapImage, canvasWidth, canvasHeight, true)
+            Bitmap.createScaledBitmap(it, canvasWidth, canvasHeight, true)
+        } ?: Bitmap.createScaledBitmap(mBitmapImage, canvasWidth, canvasHeight, true)
 
         // Calculate the cropped region bounds within the scaled bitmap.
         var imgLef = if (rect.left.toInt() < 0) 0 else rect.left.toInt()
