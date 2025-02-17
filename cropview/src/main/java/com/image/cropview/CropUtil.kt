@@ -1,3 +1,5 @@
+@file:Suppress("RedundantConstructorKeyword")
+
 package com.image.cropview
 
 import android.graphics.Bitmap
@@ -114,8 +116,8 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
      */
     public fun resetCropIRect() {
         // Irect resetting
-        val canWidth = canvasSize.canvasWidth
-        val canHeight = canvasSize.canvasHeight
+        val canWidth = canvasSize.width
+        val canHeight = canvasSize.height
 
         if (getCurrCropType() == CropType.SQUARE ||
             getCurrCropType() == CropType.PROFILE_CIRCLE
@@ -251,26 +253,26 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
                 val y = offsetCheck.y
                 var newOffset: Offset? = null
 
-                if (y <= 0F && x > 0.0F && (x + iRect.size.width in 0F..canvasSize.canvasWidth)) {
+                if (y <= 0F && x > 0.0F && (x + iRect.size.width in 0F..canvasSize.width)) {
                     // top side touched to edge
                     newOffset = Offset(x, 0.0F)
 
-                } else if (x <= 0F && y > 0F && (y + iRect.size.height in 0F..canvasSize.canvasHeight)) {
+                } else if (x <= 0F && y > 0F && (y + iRect.size.height in 0F..canvasSize.height)) {
                     // left side touched to edge
                     newOffset = Offset(0.0F, y)
 
-                } else if ((x + iRect.size.width >= canvasSize.canvasWidth) && y >= 0F
-                    && (y + iRect.size.height in 0F..canvasSize.canvasHeight)
+                } else if ((x + iRect.size.width >= canvasSize.width) && y >= 0F
+                    && (y + iRect.size.height in 0F..canvasSize.height)
                 ) {
                     // right side touched to edge
-                    newOffset = Offset((canvasSize.canvasWidth - iRect.size.width), y)
+                    newOffset = Offset((canvasSize.width - iRect.size.width), y)
 
-                } else if ((y + iRect.size.height >= canvasSize.canvasHeight) &&
+                } else if ((y + iRect.size.height >= canvasSize.height) &&
                     x > 0F &&
-                    (x + iRect.size.width in 0F..canvasSize.canvasWidth)
+                    (x + iRect.size.width in 0F..canvasSize.width)
                 ) {
                     // bottom side touched to edge
-                    newOffset = Offset(x, (canvasSize.canvasHeight - iRect.size.height))
+                    newOffset = Offset(x, (canvasSize.height - iRect.size.height))
                 }
                 if (newOffset != null) {
                     updateIRectTopLeftPoint(newOffset)
@@ -440,19 +442,19 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
      */
     private fun bottomLeftCornerDrag(dragPoint: Offset) {
         dragDiffCalculation(dragPoint)?.let { dragDiff ->
-            val canvasHeight = canvasSize.canvasHeight
+            val canvasHeight = canvasSize.height
             val size = iRect.size
 
             // For Y-Axis
             val h = (size.height + dragDiff.y)
-            val height = if ((h + iRect.topLeft.y) > (canvasSize.canvasHeight)) {
-                (canvasSize.canvasHeight - iRect.topLeft.y)
+            val height = if ((h + iRect.topLeft.y) > (canvasSize.height)) {
+                (canvasSize.height - iRect.topLeft.y)
             } else h
 
 
             // For X-Axis
-            val x = if ((iRect.topLeft.x + dragDiff.x) >= (canvasSize.canvasWidth - minLimit)) {
-                canvasSize.canvasWidth - minLimit
+            val x = if ((iRect.topLeft.x + dragDiff.x) >= (canvasSize.width - minLimit)) {
+                canvasSize.width - minLimit
             } else {
                 val a = iRect.topLeft.x + dragDiff.x
                 if (a < 0F) return
@@ -467,7 +469,7 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
                 (size.width + abs(dragDiff.x))
             } else (size.width - abs(dragDiff.x))
 
-            if (width >= canvasSize.canvasWidth) width = canvasSize.canvasWidth
+            if (width >= canvasSize.width) width = canvasSize.width
 
             val sizeOfIRect = when (cropType) {
                 CropType.PROFILE_CIRCLE, CropType.SQUARE -> {
@@ -508,13 +510,13 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
      */
     private fun bottomRightCornerDrag(dragPoint: Offset) {
         dragDiffCalculation(dragPoint)?.let { dragDiff ->
-            val canvasHeight = canvasSize.canvasHeight
+            val canvasHeight = canvasSize.height
             val (sizeWidth, sizeHeight) = iRect.size
 
             val newWidth = (sizeWidth + dragDiff.x)
-                .coerceAtMost(canvasSize.canvasWidth - iRect.topLeft.x)
+                .coerceAtMost(canvasSize.width - iRect.topLeft.x)
             val newHeight = (sizeHeight + dragDiff.y)
-                .coerceAtMost(canvasSize.canvasHeight - iRect.topLeft.y)
+                .coerceAtMost(canvasSize.height - iRect.topLeft.y)
 
             val sizeOfIrect = when (cropType) {
                 CropType.PROFILE_CIRCLE, CropType.SQUARE -> {
@@ -581,7 +583,7 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
     private fun isDragPointInsideTheCanvas(dragPoint: Offset): Boolean {
         val x = (dragPoint.x + iRect.size.width)
         val y = (dragPoint.y + iRect.size.height)
-        return (x in 0F..canvasSize.canvasWidth && y in 0F..canvasSize.canvasHeight)
+        return (x in 0F..canvasSize.width && y in 0F..canvasSize.height)
     }
 
     /**
@@ -694,37 +696,37 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
      *  @return The cropped [Bitmap] based on the current rectangle bounds.
      */
     public fun cropImage(): Bitmap {
-        val canvasWidth = canvasSize.canvasWidth.toInt()
-        val canvasHeight = canvasSize.canvasHeight.toInt()
+        val canvasWidth = canvasSize.width.toInt()
+        val canvasHeight = canvasSize.height.toInt()
 
         // Get the rectangle bounds to crop
-        val rect = getRectFromPoints()
+        val cropRect = getRectFromPoints()
+
+        val sourceBitmap = bitmapImage ?: mBitmapImage
+
+        if (canvasWidth <= 0 || canvasHeight <= 0) return sourceBitmap
 
         // Create a scaled bitmap from the original image
-        val bitmap: Bitmap = bitmapImage?.let {
-            Bitmap.createScaledBitmap(it, canvasWidth, canvasHeight, true)
-        } ?: Bitmap.createScaledBitmap(mBitmapImage, canvasWidth, canvasHeight, true)
+        val scaledBitmap = Bitmap.createScaledBitmap(sourceBitmap, canvasWidth, canvasHeight, true)
 
-        // Calculate the cropped region bounds within the scaled bitmap.
-        var imgLef = if (rect.left.toInt() < 0) 0 else rect.left.toInt()
-        var imgTop = if (rect.top.toInt() < 0) 0 else rect.top.toInt()
+        var cropLeft = cropRect.left.toInt().coerceAtLeast(0)
+        var cropTop = cropRect.top.toInt().coerceAtLeast(0)
+        val cropWidth = cropRect.width.toInt().coerceAtMost(canvasWidth)
+        val cropHeight = cropRect.height.toInt().coerceAtMost(canvasHeight)
 
-        val imgWidth = if (rect.width.toInt() > canvasWidth) canvasWidth else rect.width.toInt()
-        val imgHeight =
-            if (rect.height.toInt() > canvasHeight) canvasHeight else rect.height.toInt()
 
         // Adjust bounds to ensure they fit within the canvas size.
-        if (imgLef + imgWidth > canvasWidth) {
-            imgLef = 0
+        if (cropLeft + cropWidth > canvasWidth) {
+            cropLeft = 0
         }
-        if (imgTop + imgHeight > canvasHeight) {
-            imgTop = abs(canvasHeight - imgHeight)
+        if (cropTop + cropHeight > canvasHeight) {
+            cropTop = abs(canvasHeight - cropHeight)
         }
 
         // Create the cropped bitmap.
-        val cropBitmap = if (imgWidth <= 0 || imgHeight <= 0) {
+        val cropBitmap = if (cropWidth <= 0 || cropHeight <= 0) {
             Bitmap.createBitmap(
-                bitmap,
+                scaledBitmap,
                 0,
                 0,
                 canvasWidth,
@@ -732,11 +734,11 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
             )
         } else {
             Bitmap.createBitmap(
-                bitmap,
-                imgLef,
-                imgTop,
-                imgWidth,
-                imgHeight
+                scaledBitmap,
+                cropLeft,
+                cropTop,
+                cropWidth,
+                cropHeight
             )
         }
 

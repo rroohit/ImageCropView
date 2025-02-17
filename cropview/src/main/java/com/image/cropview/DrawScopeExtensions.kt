@@ -15,8 +15,8 @@ import kotlin.math.abs
 public fun DrawScope.drawBitmap(bitmap: Bitmap, canvasSize: CanvasSize) {
     val mBitmap = Bitmap.createScaledBitmap(
         bitmap,
-        canvasSize.canvasWidth.toInt(),
-        canvasSize.canvasHeight.toInt(),
+        canvasSize.width.toInt(),
+        canvasSize.height.toInt(),
         false
     )
     drawImage(mBitmap.asImageBitmap())
