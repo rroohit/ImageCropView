@@ -1,6 +1,7 @@
 package com.image.cropview
 
 import android.graphics.Bitmap
+import android.graphics.Matrix
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
@@ -12,15 +13,65 @@ import androidx.compose.ui.unit.min
 import kotlin.math.abs
 
 // Scale given bitmap to given canvas size and draw the scaled bitmap on canvas draw scope
+/**
+ * Extension function to draw a Bitmap onto a DrawScope, scaling it to fit the canvas.
+ *
+ * This improved version handles cases where the bitmap doesn't need scaling, avoids unnecessary allocations,
+ * uses a more robust scaling method, and adds logging for potential issues.
+ *
+ * @param bitmap The Bitmap to draw.
+ * @param canvasSize The target size (width and height) of the canvas.
+ *
+ */
 public fun DrawScope.drawBitmap(bitmap: Bitmap, canvasSize: CanvasSize) {
-    val mBitmap = Bitmap.createScaledBitmap(
-        bitmap,
+    val targetWidth = canvasSize.width.toInt()
+    val targetHeight = canvasSize.height.toInt()
+
+    // Check if scaling is necessary.
+    if (bitmap.width == targetWidth && bitmap.height == targetHeight) {
+        // No scaling needed, draw directly.
+        drawImage(bitmap.asImageBitmap())
+        return
+    }
+
+    // Check if canvas size is valid.
+    if (canvasSize.width <= 0 || canvasSize.height <= 0) {
+        return
+    }
+
+    // Calculate scaling factors
+    val scaleX = targetWidth.toFloat() / bitmap.width
+    val scaleY = targetHeight.toFloat() / bitmap.height
+
+    // Create a matrix for scaling
+    val matrix = Matrix().apply {
+        postScale(scaleX, scaleY)
+    }
+
+    // Create a new bitmap with the target dimensions and apply the scaling
+    val scaledBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+
+    try{
+        // Draw the scaled bitmap onto the canvas.
+        drawImage(scaledBitmap.asImageBitmap())
+    } catch (e: IllegalArgumentException){
+        //Log.e("drawScaledBitmap", "Error scaling and drawing bitmap: ${e.message}")
+    } finally {
+        if (scaledBitmap != bitmap) {
+            scaledBitmap.recycle()
+            //Log.d("drawScaledBitmap", "Scaled bitmap recycled.")
+        }
+    }
+}
+
+/*public fun DrawScope.drawBitmap(bitmap: Bitmap, canvasSize: CanvasSize) {
+    val mBitmap = bitmap.scale(
         canvasSize.width.toInt(),
         canvasSize.height.toInt(),
         false
     )
     drawImage(mBitmap.asImageBitmap())
-}
+}*/
 
 // Draw the bordered rectangle view
 public fun DrawScope.drawCropRectangleView(

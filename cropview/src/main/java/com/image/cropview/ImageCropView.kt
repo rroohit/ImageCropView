@@ -3,6 +3,7 @@ package com.image.cropview
 import android.graphics.Bitmap
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -67,6 +68,7 @@ public class ImageCrop(
 
         Canvas(
             modifier = modifier
+                .fillMaxSize()
                 .onSizeChanged { intSize ->
                     cropUtil.onCanvasSizeChanged(intSize = intSize)
                 }
