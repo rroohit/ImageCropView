@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import kotlin.math.abs
+import androidx.core.graphics.scale
 
 // Scale given bitmap to given canvas size and draw the scaled bitmap on canvas draw scope
 /**
@@ -59,10 +60,34 @@ public fun DrawScope.drawBitmap(bitmap: Bitmap, canvasSize: CanvasSize) {
     } finally {
         if (scaledBitmap != bitmap) {
             scaledBitmap.recycle()
-            //Log.d("drawScaledBitmap", "Scaled bitmap recycled.")
         }
     }
 }
+
+public fun DrawScope.drawBitmap2(bitmap: Bitmap, canvasSize: CanvasSize) {
+    val aspectRatio = bitmap.width.toFloat() / bitmap.height
+    val targetWidth: Int
+    val targetHeight: Int
+
+    if (canvasSize.width / canvasSize.height > aspectRatio) {
+        // Fit by height
+        targetHeight = canvasSize.height.toInt()
+        targetWidth = (targetHeight * aspectRatio).toInt()
+    } else {
+        // Fit by width
+        targetWidth = canvasSize.width.toInt()
+        targetHeight = (targetWidth / aspectRatio).toInt()
+    }
+
+    val scaledBitmap = if (bitmap.width != targetWidth || bitmap.height != targetHeight) {
+        bitmap.scale(targetWidth, targetHeight, false)
+    } else {
+        bitmap
+    }
+
+    drawImage(scaledBitmap.asImageBitmap())
+}
+
 
 /*public fun DrawScope.drawBitmap(bitmap: Bitmap, canvasSize: CanvasSize) {
     val mBitmap = bitmap.scale(
