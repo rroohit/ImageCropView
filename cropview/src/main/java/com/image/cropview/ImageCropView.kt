@@ -153,12 +153,17 @@ public class ImageCrop(
 
     /**
      * Implements the [OnCrop] interface method to perform cropping and return the resulting [Bitmap].
+     * @param cropSourceImage [Boolean] If true, crop the source image, if false, crop the scaled image in the canvas
      *
      * @return The cropped [Bitmap] based on the current crop view configuration.
      */
-    override fun onCrop(): Bitmap {
+    override fun onCrop(cropSourceImage: Boolean): Bitmap {
         this.cropU.updateBitmapImage(bitmapImage)
-        return this.cropU.cropImage()
+        return if (cropSourceImage) {
+            this.cropU.cropSourceImage()
+        } else {
+            this.cropU.cropImage()
+        }
     }
 
     /**
@@ -176,10 +181,11 @@ public class ImageCrop(
 private interface OnCrop {
     /**
      * Performs cropping and returns the resulting [Bitmap].
+     * @param cropSourceImage [Boolean] If true, crop the source image, if false, crop the scaled image in the canvas
      *
      * @return The cropped [Bitmap] based on the current crop view configuration.
      */
-    fun onCrop(): Bitmap
+    fun onCrop(cropSourceImage: Boolean = false): Bitmap
 
     /**
      * Resets the crop view to its initial state.

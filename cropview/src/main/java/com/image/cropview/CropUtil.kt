@@ -756,6 +756,56 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
         return Bitmap.createScaledBitmap(cropBitmap, canvasWidth, canvasHeight, true)
     }
 
+    /**
+     *  - Crops the bitmap based on the current rectangle bounds and returns the cropped bitmap.
+     *      The function creates a scaled bitmap from the original image, using the region defined by the user
+     *      scaled to the original bitmap size. This ensures the returned bitmap is a crop of the original image, not
+     *      the scaled version rendered in the canvas.
+     *
+     *  @return The cropped [Bitmap] based on the current rectangle bounds.
+     */
+    public fun cropSourceImage(): Bitmap {
+        val sourceBitmap = bitmapImage ?: mBitmapImage
+
+        // Get crop rectangle in canvas coordinates
+        val canvasCropRect = getRectFromPoints()
+
+        // If canvas size is invalid, just return the source bitmap
+        if (canvasSize.width <= 0f || canvasSize.height <= 0f) {
+            return sourceBitmap
+        }
+
+        // Calculate scale factors between source bitmap and canvas
+        val scaleX = sourceBitmap.width.toFloat() / canvasSize.width
+        val scaleY = sourceBitmap.height.toFloat() / canvasSize.height
+
+        // Translate the canvas crop rectangle to source bitmap coordinates
+        var sourceCropLeft = (canvasCropRect.left * scaleX).toInt()
+        var sourceCropTop = (canvasCropRect.top * scaleY).toInt()
+        var sourceCropWidth = (canvasCropRect.width * scaleX).toInt()
+        var sourceCropHeight = (canvasCropRect.height * scaleY).toInt()
+
+        // Validate and adjust crop coordinates against the source bitmap dimensions to prevent IndexOutOfBounds
+        // when creating the final bitmap
+        sourceCropLeft = sourceCropLeft.coerceAtLeast(0)
+        sourceCropTop = sourceCropTop.coerceAtLeast(0)
+        sourceCropWidth = sourceCropWidth.coerceAtMost(sourceBitmap.width - sourceCropLeft)
+        sourceCropHeight = sourceCropHeight.coerceAtMost(sourceBitmap.height - sourceCropTop)
+
+        // If final crop width or height is invalid, just return the source bitmap
+        if (sourceCropWidth <= 0 || sourceCropHeight <= 0) {
+            return sourceBitmap
+        }
+
+        return Bitmap.createBitmap(
+            sourceBitmap,
+            sourceCropLeft,
+            sourceCropTop,
+            sourceCropWidth,
+            sourceCropHeight
+        )
+    }
+
     public fun updateCropType(type: CropType) {
         cropType = type
         resetCropIRect()
