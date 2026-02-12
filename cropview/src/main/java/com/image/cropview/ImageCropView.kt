@@ -178,17 +178,17 @@ public class ImageCrop(
 /**
  * Interface defining methods for cropping and resetting the crop view.
  */
-private interface OnCrop {
+public interface OnCrop {
     /**
      * Performs cropping and returns the resulting [Bitmap].
      * @param cropSourceImage [Boolean] If true, crop the source image, if false, crop the scaled image in the canvas
      *
      * @return The cropped [Bitmap] based on the current crop view configuration.
      */
-    fun onCrop(cropSourceImage: Boolean = false): Bitmap
+    public fun onCrop(cropSourceImage: Boolean = false): Bitmap
 
     /**
      * Resets the crop view to its initial state.
      */
-    fun resetView()
+    public fun resetView()
 }
