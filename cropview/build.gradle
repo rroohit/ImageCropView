@@ -10,11 +10,10 @@ apply from: "${rootProject.projectDir}/publish.gradle"
 
 android {
     namespace 'com.image.cropview'
-    compileSdk 34
+    compileSdk 35
 
     defaultConfig {
         minSdk 24
-        targetSdk 35
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -46,6 +45,12 @@ android {
 
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.3"
+    }
+    lint {
+        targetSdk 35
+    }
+    testOptions {
+        targetSdk 35
     }
 }
 

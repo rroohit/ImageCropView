@@ -1,13 +1,16 @@
 package com.image.cropview
 
+import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -48,6 +51,7 @@ public class ImageCrop(
      *  @param cropType [CropType]
      *  @param edgeType [EdgeType]
      */
+    @SuppressLint("UnusedBoxWithConstraintsScope")
     @Composable
     public fun ImageCropView(
         modifier: Modifier = Modifier,
@@ -66,89 +70,105 @@ public class ImageCrop(
             cropU.updateCropType(cropType)
         }
 
-        Canvas(
-            modifier = modifier
-                .fillMaxSize()
-                .onSizeChanged { intSize ->
-                    cropUtil.onCanvasSizeChanged(intSize = intSize)
-                }
-                .pointerInput(Unit) {
-                    detectDragGestures(
-                        onDragStart = { touchPoint ->
-                            cropUtil.onDragStart(touchPoint)
-                        },
-                        onDrag = { pointerInputChange, _ ->
-                            // consume the drag points and update the rect
-                            pointerInputChange.consume()
+        BoxWithConstraints(
+            modifier = modifier,
+            contentAlignment = Alignment.Center
+        ) {
+            val imageAspectRatio = bitmapImage.width.toFloat() / bitmapImage.height.toFloat()
+            val containerAspectRatio = maxWidth.value / maxHeight.value
 
-                            val dragPoint = pointerInputChange.position
-                            cropUtil.onDrag(dragPoint)
-                        },
-                        onDragEnd = {
-                            cropU.onDragEnd()
-                        }
-                    )
-                },
+            val (targetWidth, targetHeight) = if (imageAspectRatio > containerAspectRatio) {
+                // Image is wider than container - fit by width
+                maxWidth to (maxWidth / imageAspectRatio)
+            } else {
+                // Image is taller than container - fit by height
+                (maxHeight * imageAspectRatio) to maxHeight
+            }
 
-            onDraw = {
-                // Draw bitmap image on rect
-                drawBitmap(
-                    bitmap = bitmapImage,
-                    canvasSize = cropUtil.canvasSize
-                )
+            Canvas(
+                modifier = Modifier
+                    .size(width = targetWidth, height = targetHeight)
+                    .onSizeChanged { intSize ->
+                        cropUtil.onCanvasSizeChanged(intSize = intSize)
+                    }
+                    .pointerInput(Unit) {
+                        detectDragGestures(
+                            onDragStart = { touchPoint ->
+                                cropUtil.onDragStart(touchPoint)
+                            },
+                            onDrag = { pointerInputChange, _ ->
+                                // consume the drag points and update the rect
+                                pointerInputChange.consume()
 
-                // Circle
-                if (cropType == CropType.PROFILE_CIRCLE) {
-                    val circleRadius: Float = (cropU.iRect.size.width / 2)
-                    val circlePath = Path().apply {
-                        addOval(
-                            Rect(
-                                center = Offset(
-                                    cropU.iRect.topLeft.x + (circleRadius),
-                                    cropU.iRect.topLeft.y + (circleRadius)
-                                ),
-                                radius = circleRadius - guideLineWidth.toPx()
-                            )
+                                val dragPoint = pointerInputChange.position
+                                cropUtil.onDrag(dragPoint)
+                            },
+                            onDragEnd = {
+                                cropU.onDragEnd()
+                            }
                         )
+                    },
+
+                onDraw = {
+                    // Draw bitmap image on rect
+                    drawBitmap(
+                        bitmap = bitmapImage,
+                        canvasSize = cropUtil.canvasSize
+                    )
+
+                    // Circle
+                    if (cropType == CropType.PROFILE_CIRCLE) {
+                        val circleRadius: Float = (cropU.iRect.size.width / 2)
+                        val circlePath = Path().apply {
+                            addOval(
+                                Rect(
+                                    center = Offset(
+                                        cropU.iRect.topLeft.x + (circleRadius),
+                                        cropU.iRect.topLeft.y + (circleRadius)
+                                    ),
+                                    radius = circleRadius - guideLineWidth.toPx()
+                                )
+                            )
+                        }
+
+                        clipPath(circlePath, clipOp = ClipOp.Difference) {
+                            drawRect(SolidColor(Color.Black.copy(alpha = 0.5f)))
+                        }
                     }
 
-                    clipPath(circlePath, clipOp = ClipOp.Difference) {
-                        drawRect(SolidColor(Color.Black.copy(alpha = 0.5f)))
-                    }
-                }
-
-                // Actual crop view rect
-                drawCropRectangleView(
-                    guideLineColor = guideLineColor,
-                    guideLineWidth = guideLineWidth,
-                    iRect = cropU.iRect
-                )
-
-                if (showGuideLines) {
-                    drawGuideLines(
-                        noOfGuideLines = 2,
+                    // Actual crop view rect
+                    drawCropRectangleView(
                         guideLineColor = guideLineColor,
                         guideLineWidth = guideLineWidth,
                         iRect = cropU.iRect
                     )
-                }
 
-                // Circular edges of crop rect corner
-                if (edgeType == EdgeType.CIRCULAR) {
-                    drawCircularEdges(
-                        edgeCircleSize = edgeCircleSize,
-                        guideLineColor = guideLineColor,
-                        iRect = cropU.iRect
-                    )
-                } else {
-                    drawSquareBrackets(
-                        guideLineColor = guideLineColor,
-                        guideLineWidthGiven = guideLineWidth,
-                        iRect = cropU.iRect
-                    )
+                    if (showGuideLines) {
+                        drawGuideLines(
+                            noOfGuideLines = 2,
+                            guideLineColor = guideLineColor,
+                            guideLineWidth = guideLineWidth,
+                            iRect = cropU.iRect
+                        )
+                    }
+
+                    // Circular edges of crop rect corner
+                    if (edgeType == EdgeType.CIRCULAR) {
+                        drawCircularEdges(
+                            edgeCircleSize = edgeCircleSize,
+                            guideLineColor = guideLineColor,
+                            iRect = cropU.iRect
+                        )
+                    } else {
+                        drawSquareBrackets(
+                            guideLineColor = guideLineColor,
+                            guideLineWidthGiven = guideLineWidth,
+                            iRect = cropU.iRect
+                        )
+                    }
                 }
-            }
-        )
+            )
+        }
     }
 
     /**

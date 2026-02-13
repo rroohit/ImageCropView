@@ -283,57 +283,61 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
 
     /**
      *  - Handles the drag operation for resizing the rectangle when the top-left corner is touched.
-     *      Calculates the drag difference, updates the top-left point, and adjusts the width and height
-     *      of the rectangle while ensuring it stays within specified limits.
+     *      The bottom-right corner remains fixed while the top-left corner is dragged.
      *
      *  @param dragPoint The current coordinates during the drag as an [Offset].
      */
     private fun topLeftCornerDrag(dragPoint: Offset) {
         dragDiffCalculation(dragPoint)?.let { dragDiff ->
             val (canvasWidth, canvasHeight) = canvasSize
-            val size = iRect.size
 
+            // Anchor: bottom-right corner must stay fixed
+            val fixedRight = irectTopleft.x + iRect.size.width
+            val fixedBottom = irectTopleft.y + iRect.size.height
 
-            val x = (0f.coerceAtLeast(irectTopleft.x + dragDiff.x))
-                .coerceAtMost(canvasWidth - minLimit)
+            // Calculate new top-left position
+            var newX = irectTopleft.x + dragDiff.x
+            var newY = irectTopleft.y + dragDiff.y
 
-            val y = (0f.coerceAtLeast(irectTopleft.y + dragDiff.y))
-                .coerceAtMost(canvasHeight - minLimit)
+            // Constrain within canvas bounds
+            newX = newX.coerceAtLeast(0f)
+            newY = newY.coerceAtLeast(0f)
 
+            // Ensure minimum size by limiting how far top-left can move toward bottom-right
+            newX = newX.coerceAtMost(fixedRight - minLimit)
+            newY = newY.coerceAtMost(fixedBottom - minLimit)
 
-            // Calculate new width and height based on drag direction
-            val newWidth = calculateNewSize(size.width, dragDiff.x)
-            val newHeight = calculateNewSize(size.height, dragDiff.y)
-
-            irectTopleft = Offset(x, y)
+            // Compute new size from fixed bottom-right and new top-left
+            val newWidth = fixedRight - newX
+            val newHeight = fixedBottom - newY
 
             val sizeOfIRect = when (cropType) {
                 CropType.PROFILE_CIRCLE, CropType.SQUARE -> {
-                    val sqSide = min(newWidth, canvasWidth)
-                    val totalHeight = (sqSide + irectTopleft.y)
-                    val diff = canvasHeight - totalHeight
-                    if (diff < 0) {
-                        irectTopleft = irectTopleft.copy(
-                            y = (irectTopleft.y + diff)
-                        )
+                    // For square, use the smaller dimension change
+                    val sqSide = min(newWidth, newHeight).coerceAtLeast(minLimit)
+                    // Adjust top-left to maintain square from fixed bottom-right
+                    newX = fixedRight - sqSide
+                    newY = fixedBottom - sqSide
+                    // Ensure we don't go outside canvas
+                    if (newX < 0f) {
+                        newX = 0f
                     }
-
-                    Size(width = sqSide, height = sqSide)
+                    if (newY < 0f) {
+                        newY = 0f
+                    }
+                    val finalSide = min(fixedRight - newX, fixedBottom - newY)
+                    newX = fixedRight - finalSide
+                    newY = fixedBottom - finalSide
+                    Size(width = finalSide, height = finalSide)
                 }
 
                 else -> { // Free style
-                    Size(
-                        width = min(newWidth, canvasWidth),
-                        height = min(newHeight, canvasHeight)
-                    )
+                    Size(width = newWidth, height = newHeight)
                 }
             }
 
-            iRect = iRect.copy(
-                topLeft = irectTopleft,
-                size = sizeOfIRect
-            )
-
+            irectTopleft = Offset(newX, newY)
+            iRect = iRect.copy(topLeft = irectTopleft, size = sizeOfIRect)
             updateTouchRect()
         }
     }
@@ -357,191 +361,162 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
 
     /**
      *  - Handles the drag operation for resizing the rectangle when the top-right corner is touched.
-     *      Calculates the drag difference, adjusts the width and height of the rectangle while ensuring
-     *      it stays within specified limits, and updates the rectangle accordingly.
+     *      The bottom-left corner remains fixed while the top-right corner is dragged.
      *
      *  @param dragPoint The current coordinates during the drag as an [Offset].
      */
     private fun topRightCornerDrag(dragPoint: Offset) {
         dragDiffCalculation(dragPoint)?.let { dragDiff ->
-            // If irect y is already at 0 and dragDiff y is negative, no need to update
-            if (iRect.topLeft.y <= 0F && dragDiff.y < 0F) return
-
-            val size = iRect.size
             val (canvasWidth, canvasHeight) = canvasSize
-            val irectX = iRect.topLeft.x
-            val irectY = iRect.topLeft.y
 
-            // Calculate new width based on drag direction
-            val newWidth = if (dragDiff.x < 0F) {
-                (size.width - abs(dragDiff.x))
-            } else (size.width + abs(dragDiff.x))
+            // Anchor: bottom-left corner must stay fixed
+            val fixedLeft = irectTopleft.x
+            val fixedBottom = irectTopleft.y + iRect.size.height
 
-            // Limit width based on canvas boundaries
-            val width = if ((newWidth + irectX) > canvasWidth) {
-                canvasWidth - irectX
-            } else {
-                if (newWidth <= minLimit) return
-                newWidth
-            }
+            // Calculate new top-right position
+            var newRight = irectTopleft.x + iRect.size.width + dragDiff.x
+            var newTop = irectTopleft.y + dragDiff.y
 
-            // Calculate new height based on drag direction
-            var height = if (dragDiff.y <= 0F) {
-                (size.height + abs(dragDiff.y))
-            } else {
-                (size.height - abs(dragDiff.y))
-            }
+            // Constrain within canvas bounds
+            newRight = newRight.coerceAtMost(canvasWidth)
+            newTop = newTop.coerceAtLeast(0f)
 
-            // Limit height based on canvas boundaries
-            if (height > canvasHeight) height = canvasHeight
+            // Ensure minimum size
+            newRight = newRight.coerceAtLeast(fixedLeft + minLimit)
+            newTop = newTop.coerceAtMost(fixedBottom - minLimit)
 
-            // Calculate new y-point within canvas boundaries
-            val yLimitPoint = canvasHeight - minLimit
-            var yPoint = irectY + dragDiff.y
-            yPoint = if (yPoint <= 0F) 0F else {
-                if (yPoint >= yLimitPoint) yLimitPoint else yPoint
-            }
-            // Update top-left point and rectangle size
-            irectTopleft = irectTopleft.copy(y = yPoint)
+            // Compute new size from fixed bottom-left
+            val newWidth = newRight - fixedLeft
+            val newHeight = fixedBottom - newTop
 
             val sizeOfIRect = when (cropType) {
                 CropType.PROFILE_CIRCLE, CropType.SQUARE -> {
-                    val sqSide = maxOf(minLimit, width)
-                    val totalHeight = (sqSide + irectTopleft.y)
-                    val diff = canvasHeight - totalHeight
-
-                    if (diff < 0) {
-                        irectTopleft = irectTopleft.copy(
-                            y = (irectTopleft.y + diff)
-                        )
+                    // For square, use the smaller dimension change
+                    val sqSide = min(newWidth, newHeight).coerceAtLeast(minLimit)
+                    // Adjust to maintain square from fixed bottom-left
+                    newTop = fixedBottom - sqSide
+                    // Ensure we don't go outside canvas
+                    if (newTop < 0f) {
+                        newTop = 0f
                     }
-                    Size(width = sqSide, height = sqSide)
+                    val finalSide = min(fixedLeft + canvasWidth - fixedLeft, fixedBottom - newTop)
+                        .coerceAtMost(sqSide)
+                    newTop = fixedBottom - finalSide
+                    Size(width = finalSide, height = finalSide)
                 }
 
                 else -> { // Free style
-                    Size(width = maxOf(minLimit, width), height = maxOf(minLimit, height))
+                    Size(width = newWidth, height = newHeight)
                 }
             }
 
-
-            iRect = iRect.copy(
-                topLeft = irectTopleft,
-                size = sizeOfIRect
-            )
-
+            irectTopleft = Offset(fixedLeft, newTop)
+            iRect = iRect.copy(topLeft = irectTopleft, size = sizeOfIRect)
             updateTouchRect()
         }
     }
 
     /**
      *  - Handles the drag operation for resizing the rectangle when the bottom-left corner is touched.
-     *      Calculates the drag difference, adjusts the width and height of the rectangle while ensuring
-     *      it stays within specified limits, and updates the rectangle accordingly.
+     *      The top-right corner remains fixed while the bottom-left corner is dragged.
      *
      *  @param dragPoint The current coordinates during the drag as an [Offset].
      */
     private fun bottomLeftCornerDrag(dragPoint: Offset) {
         dragDiffCalculation(dragPoint)?.let { dragDiff ->
-            val canvasHeight = canvasSize.height
-            val size = iRect.size
+            val (canvasWidth, canvasHeight) = canvasSize
 
-            // For Y-Axis
-            val h = (size.height + dragDiff.y)
-            val height = if ((h + iRect.topLeft.y) > (canvasSize.height)) {
-                (canvasSize.height - iRect.topLeft.y)
-            } else h
+            // Anchor: top-right corner must stay fixed
+            val fixedTop = irectTopleft.y
+            val fixedRight = irectTopleft.x + iRect.size.width
 
+            // Calculate new bottom-left position
+            var newLeft = irectTopleft.x + dragDiff.x
+            var newBottom = irectTopleft.y + iRect.size.height + dragDiff.y
 
-            // For X-Axis
-            val x = if ((iRect.topLeft.x + dragDiff.x) >= (canvasSize.width - minLimit)) {
-                canvasSize.width - minLimit
-            } else {
-                val a = iRect.topLeft.x + dragDiff.x
-                if (a < 0F) return
-                a
-            }
+            // Constrain within canvas bounds
+            newLeft = newLeft.coerceAtLeast(0f)
+            newBottom = newBottom.coerceAtMost(canvasHeight)
 
-            // Update top-left point and rectangle size
-            irectTopleft = Offset(x = if (x < 0F) 0F else x, y = iRect.topLeft.y)
+            // Ensure minimum size
+            newLeft = newLeft.coerceAtMost(fixedRight - minLimit)
+            newBottom = newBottom.coerceAtLeast(fixedTop + minLimit)
 
-            // For Irect Width
-            var width = if (dragDiff.x < 0F) {
-                (size.width + abs(dragDiff.x))
-            } else (size.width - abs(dragDiff.x))
-
-            if (width >= canvasSize.width) width = canvasSize.width
+            // Compute new size from fixed top-right
+            val newWidth = fixedRight - newLeft
+            val newHeight = newBottom - fixedTop
 
             val sizeOfIRect = when (cropType) {
                 CropType.PROFILE_CIRCLE, CropType.SQUARE -> {
-                    val sqSide = maxOf(minLimit, width)
-                    val totalHeight = (sqSide + irectTopleft.y)
-                    val diff = canvasHeight - totalHeight
-
-                    if (diff < 0) {
-                        irectTopleft = irectTopleft.copy(
-                            y = (irectTopleft.y + diff)
-                        )
+                    // For square, use the smaller dimension change
+                    val sqSide = min(newWidth, newHeight).coerceAtLeast(minLimit)
+                    // Adjust to maintain square from fixed top-right
+                    newLeft = fixedRight - sqSide
+                    // Ensure we don't go outside canvas
+                    if (newLeft < 0f) {
+                        newLeft = 0f
                     }
-
-                    Size(width = sqSide, height = sqSide)
+                    val finalSide = min(fixedRight - newLeft, canvasHeight - fixedTop)
+                        .coerceAtMost(sqSide)
+                    newLeft = fixedRight - finalSide
+                    Size(width = finalSide, height = finalSide)
                 }
 
                 else -> { // Free style
-                    Size(width = maxOf(minLimit, width), height = maxOf(minLimit, height))
+                    Size(width = newWidth, height = newHeight)
                 }
-
             }
 
-            iRect = iRect.copy(
-                topLeft = irectTopleft,
-                size = sizeOfIRect
-            )
-
+            irectTopleft = Offset(newLeft, fixedTop)
+            iRect = iRect.copy(topLeft = irectTopleft, size = sizeOfIRect)
             updateTouchRect()
         }
     }
 
     /**
      *  - Handles the drag operation for resizing the rectangle when the bottom-right corner is touched.
-     *      Calculates the drag difference, adjusts the width and height of the rectangle while ensuring
-     *      it stays within specified limits, and updates the rectangle accordingly.
+     *      The top-left corner remains fixed while the bottom-right corner is dragged.
      *
      *  @param dragPoint The current coordinates during the drag as an [Offset].
      */
     private fun bottomRightCornerDrag(dragPoint: Offset) {
         dragDiffCalculation(dragPoint)?.let { dragDiff ->
-            val canvasHeight = canvasSize.height
-            val (sizeWidth, sizeHeight) = iRect.size
+            val (canvasWidth, canvasHeight) = canvasSize
 
-            val newWidth = (sizeWidth + dragDiff.x)
-                .coerceAtMost(canvasSize.width - iRect.topLeft.x)
-            val newHeight = (sizeHeight + dragDiff.y)
-                .coerceAtMost(canvasSize.height - iRect.topLeft.y)
+            // Anchor: top-left corner must stay fixed
+            val fixedLeft = irectTopleft.x
+            val fixedTop = irectTopleft.y
 
-            val sizeOfIrect = when (cropType) {
+            // Calculate new bottom-right position
+            var newRight = irectTopleft.x + iRect.size.width + dragDiff.x
+            var newBottom = irectTopleft.y + iRect.size.height + dragDiff.y
+
+            // Constrain within canvas bounds
+            newRight = newRight.coerceAtMost(canvasWidth)
+            newBottom = newBottom.coerceAtMost(canvasHeight)
+
+            // Ensure minimum size
+            newRight = newRight.coerceAtLeast(fixedLeft + minLimit)
+            newBottom = newBottom.coerceAtLeast(fixedTop + minLimit)
+
+            // Compute new size from fixed top-left
+            val newWidth = newRight - fixedLeft
+            val newHeight = newBottom - fixedTop
+
+            val sizeOfIRect = when (cropType) {
                 CropType.PROFILE_CIRCLE, CropType.SQUARE -> {
-                    val sqSide = minLimit.coerceAtLeast(newWidth)
-                    val totalHeight = (sqSide + irectTopleft.y)
-                    val diff = canvasHeight - totalHeight
-
-                    if (diff < 0) {
-                        irectTopleft = irectTopleft.copy(
-                            y = (irectTopleft.y + diff)
-                        )
-                    }
+                    // For square, use the smaller dimension
+                    val sqSide = min(newWidth, newHeight).coerceAtLeast(minLimit)
                     Size(width = sqSide, height = sqSide)
                 }
 
                 else -> { // Free style
-                    Size(
-                        width = newWidth.coerceAtLeast(minLimit),
-                        height = newHeight.coerceAtLeast(minLimit)
-                    )
+                    Size(width = newWidth, height = newHeight)
                 }
             }
 
-            // Update rectangle size
-            iRect = iRect.copy(topLeft = irectTopleft, size = sizeOfIrect)
+            // top-left stays fixed, only size changes
+            iRect = iRect.copy(topLeft = irectTopleft, size = sizeOfIRect)
             updateTouchRect()
         }
     }
@@ -836,5 +811,4 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
             bottom,            //bottom
         )
     }
-
 }
