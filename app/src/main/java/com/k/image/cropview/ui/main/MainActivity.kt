@@ -134,9 +134,9 @@ class MainActivity : ComponentActivity() {
                                     guideLineWidth = 2.dp,
                                     edgeCircleSize = 5.dp,
                                     showGuideLines = viewModel.cropType.collectAsState().value != CropType.PROFILE_CIRCLE,
-                                    // showGuideLines = true,
                                     cropType = viewModel.cropType.collectAsState().value,
-                                    edgeType = EdgeType.CIRCULAR
+                                    edgeType = EdgeType.CIRCULAR,
+                                    enableZoom = true
                                 )
 
                                 showProgressBarState.value = false

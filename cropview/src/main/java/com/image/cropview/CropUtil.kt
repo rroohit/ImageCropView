@@ -5,6 +5,7 @@ package com.image.cropview
 import android.graphics.Bitmap
 import android.graphics.PointF
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
@@ -14,6 +15,7 @@ import androidx.compose.ui.unit.IntSize
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
+import androidx.core.graphics.scale
 
 /**
  *  - Utility class for performing cropping operations on a provided bitmap image.
@@ -87,6 +89,21 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
     private var minSquareLimit: Float = maxSquareLimit * 0.3F
 
     /**
+     * The current zoom scale factor. 1.0 = no zoom.
+     */
+    public var zoomScale: Float by mutableFloatStateOf(1.0f)
+        private set
+
+    /**
+     * The current pan offset of the zoomed image, in canvas coordinates.
+     */
+    public var zoomOffset: Offset by mutableStateOf(Offset.Zero)
+        private set
+
+    private val minZoom: Float = 1.0f
+    private val maxZoom: Float = 5.0f
+
+    /**
      * The last point updated during drag operations.
      */
     private var lastPointUpdated: Offset? = null
@@ -107,6 +124,7 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
      */
     public fun onCanvasSizeChanged(intSize: IntSize) {
         canvasSize = CanvasSize(intSize.width.toFloat(), intSize.height.toFloat())
+        resetZoom()
         resetCropIRect()
     }
 
@@ -228,6 +246,146 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
     }
 
     /**
+     * The last touch point used for single-finger image pan tracking.
+     */
+    private var lastPanPoint: Offset? = null
+
+    /**
+     * Handles a pinch-zoom gesture update. Keeps the pinch centroid stationary on screen
+     * while scaling the image, and applies simultaneous two-finger pan.
+     *
+     * Correct centroid-anchored formula:
+     *   new_offset = (centroid - pivot) * (1 - scaleFactor) + old_offset * scaleFactor + panChange
+     * where pivot = canvas center.
+     *
+     * @param centroid The centroid of the pointers in canvas coordinates.
+     * @param scaleChange The multiplicative change in scale for this frame.
+     * @param panChange The translational change from centroid movement this frame.
+     */
+    public fun onZoomChange(centroid: Offset, scaleChange: Float, panChange: Offset) {
+        val newScale = (zoomScale * scaleChange).coerceIn(minZoom, maxZoom)
+        val scaleFactor = newScale / zoomScale
+        val pivot = Offset(canvasSize.width / 2f, canvasSize.height / 2f)
+        val newOffset = Offset(
+            x = (centroid.x - pivot.x) * (1f - scaleFactor) + zoomOffset.x * scaleFactor + panChange.x,
+            y = (centroid.y - pivot.y) * (1f - scaleFactor) + zoomOffset.y * scaleFactor + panChange.y
+        )
+        zoomScale = newScale
+        zoomOffset = constrainOffset(newOffset, newScale)
+    }
+
+    /**
+     * Constrains the pan offset so the zoomed image always fully covers the canvas,
+     * preventing empty (background) areas from becoming visible at the edges.
+     *
+     * At scale S, the image extends by canvasSize * S / 2 from the canvas center.
+     * The maximum offset in each direction is (canvasSize / 2) * (S - 1).
+     */
+    private fun constrainOffset(offset: Offset, scale: Float): Offset {
+        val maxOffsetX = (canvasSize.width / 2f) * (scale - 1f)
+        val maxOffsetY = (canvasSize.height / 2f) * (scale - 1f)
+        return Offset(
+            x = offset.x.coerceIn(-maxOffsetX, maxOffsetX),
+            y = offset.y.coerceIn(-maxOffsetY, maxOffsetY)
+        )
+    }
+
+    /**
+     * Resets zoom state to default (no zoom, no pan).
+     */
+    public fun resetZoom() {
+        zoomScale = 1.0f
+        zoomOffset = Offset.Zero
+        lastPanPoint = null
+    }
+
+    /**
+     * Toggles zoom on a double-tap. Zooms to 2x centred on [tapPoint] if currently
+     * at minimum zoom, or resets to 1x if already zoomed in.
+     *
+     * @param tapPoint The tap position in canvas coordinates.
+     */
+    public fun onDoubleTapZoom(tapPoint: Offset) {
+        if (zoomScale > minZoom) {
+            zoomScale = minZoom
+            zoomOffset = Offset.Zero
+        } else {
+            val targetScale = 2.0f
+            val pivot = Offset(canvasSize.width / 2f, canvasSize.height / 2f)
+            val newOffset = Offset(
+                x = (tapPoint.x - pivot.x) * (1f - targetScale),
+                y = (tapPoint.y - pivot.y) * (1f - targetScale)
+            )
+            zoomScale = targetScale
+            zoomOffset = constrainOffset(newOffset, targetScale)
+        }
+    }
+
+    /**
+     * Starts a single-finger image pan gesture at [touchPoint].
+     * Call this when the user touches outside the crop rectangle while zoomed in.
+     */
+    public fun onImagePanStart(touchPoint: Offset) {
+        lastPanPoint = touchPoint
+    }
+
+    /**
+     * Updates the image pan position during a single-finger drag.
+     * Applies the movement delta to [zoomOffset] while keeping the image within canvas bounds.
+     *
+     * @param dragPoint The current finger position in canvas coordinates.
+     */
+    public fun onImagePanDrag(dragPoint: Offset) {
+        lastPanPoint?.let { last ->
+            if (last != dragPoint) {
+                val newOffset = Offset(
+                    x = zoomOffset.x + (dragPoint.x - last.x),
+                    y = zoomOffset.y + (dragPoint.y - last.y)
+                )
+                zoomOffset = constrainOffset(newOffset, zoomScale)
+            }
+        }
+        lastPanPoint = dragPoint
+    }
+
+    /**
+     * Ends a single-finger image pan gesture.
+     */
+    public fun onImagePanEnd() {
+        lastPanPoint = null
+    }
+
+    /**
+     * Returns true if [touchPoint] is within the interactive area of the crop rectangle,
+     * including the extended corner hit zones used for resizing.
+     *
+     * Points outside this area (while zoomed) trigger image panning instead.
+     */
+    public fun isTouchOnCropRect(touchPoint: Offset): Boolean {
+        val cornerPad = paddingForTouchRect * 3f // same as minLimit for corner detection
+        val left = iRect.topLeft.x - cornerPad
+        val top = iRect.topLeft.y - cornerPad
+        val right = iRect.topLeft.x + iRect.size.width + cornerPad
+        val bottom = iRect.topLeft.y + iRect.size.height + cornerPad
+        return touchPoint.x in left..right && touchPoint.y in top..bottom
+    }
+
+    /**
+     * Maps a point from canvas coordinates to the un-zoomed image coordinate space.
+     *
+     * Forward transform: screen = pivot + scale * (imagePoint - pivot) + offset
+     * Inverse: imagePoint = pivot + (screen - offset - pivot) / scale
+     */
+    private fun canvasPointToImagePoint(canvasPoint: Offset): Offset {
+        val cx = canvasSize.width / 2f
+        val cy = canvasSize.height / 2f
+        return Offset(
+            x = cx + (canvasPoint.x - zoomOffset.x - cx) / zoomScale,
+            y = cy + (canvasPoint.y - zoomOffset.y - cy) / zoomScale
+        )
+    }
+
+    /**
      *  - Handles the drag operation for moving the entire internal rectangle (iRect).
      *      Calculates the difference in drag position, checks if the updated top-left point
      *      of iRect stays inside the canvas, and updates the iRect accordingly.
@@ -289,8 +447,6 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
      */
     private fun topLeftCornerDrag(dragPoint: Offset) {
         dragDiffCalculation(dragPoint)?.let { dragDiff ->
-            val (canvasWidth, canvasHeight) = canvasSize
-
             // Anchor: bottom-right corner must stay fixed
             val fixedRight = irectTopleft.x + iRect.size.width
             val fixedBottom = irectTopleft.y + iRect.size.height
@@ -367,7 +523,7 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
      */
     private fun topRightCornerDrag(dragPoint: Offset) {
         dragDiffCalculation(dragPoint)?.let { dragDiff ->
-            val (canvasWidth, canvasHeight) = canvasSize
+            val (canvasWidth, _) = canvasSize
 
             // Anchor: bottom-left corner must stay fixed
             val fixedLeft = irectTopleft.x
@@ -424,7 +580,7 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
      */
     private fun bottomLeftCornerDrag(dragPoint: Offset) {
         dragDiffCalculation(dragPoint)?.let { dragDiff ->
-            val (canvasWidth, canvasHeight) = canvasSize
+            val (_, canvasHeight) = canvasSize
 
             // Anchor: top-right corner must stay fixed
             val fixedTop = irectTopleft.y
@@ -674,61 +830,45 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
         val canvasWidth = canvasSize.width.toInt()
         val canvasHeight = canvasSize.height.toInt()
 
-        // Get the rectangle bounds to crop
         val cropRect = getRectFromPoints()
-
         val sourceBitmap = bitmapImage ?: mBitmapImage
 
         if (canvasWidth <= 0 || canvasHeight <= 0) return sourceBitmap
 
-        // Create a scaled bitmap from the original image
-        val scaledBitmap = Bitmap.createScaledBitmap(sourceBitmap, canvasWidth, canvasHeight, true)
+        val scaledBitmap = sourceBitmap.scale(canvasWidth, canvasHeight)
 
-        var cropLeft = cropRect.left.toInt().coerceAtLeast(0)
-        var cropTop = cropRect.top.toInt().coerceAtLeast(0)
-        val cropWidth = cropRect.width.toInt().coerceAtMost(canvasWidth)
-        val cropHeight = cropRect.height.toInt().coerceAtMost(canvasHeight)
+        // Map crop rect corners through inverse zoom transform
+        val topLeftImage = canvasPointToImagePoint(Offset(cropRect.left, cropRect.top))
+        val bottomRightImage = canvasPointToImagePoint(Offset(cropRect.right, cropRect.bottom))
 
+        val cropLeft = topLeftImage.x.toInt().coerceAtLeast(0)
+        val cropTop = topLeftImage.y.toInt().coerceAtLeast(0)
+        var cropWidth = (bottomRightImage.x - topLeftImage.x).toInt().coerceIn(1, canvasWidth)
+        var cropHeight = (bottomRightImage.y - topLeftImage.y).toInt().coerceIn(1, canvasHeight)
 
-        // Adjust bounds to ensure they fit within the canvas size.
         if (cropLeft + cropWidth > canvasWidth) {
-            cropLeft = 0
+            cropWidth = canvasWidth - cropLeft
         }
         if (cropTop + cropHeight > canvasHeight) {
-            cropTop = abs(canvasHeight - cropHeight)
+            cropHeight = canvasHeight - cropTop
         }
 
-        // Create the cropped bitmap.
-        val cropBitmap = if (cropWidth <= 0 || cropHeight <= 0) {
-            Bitmap.createBitmap(
-                scaledBitmap,
-                0,
-                0,
-                canvasWidth,
-                canvasHeight
-            )
-        } else {
-            Bitmap.createBitmap(
-                scaledBitmap,
-                cropLeft,
-                cropTop,
-                cropWidth,
-                cropHeight
-            )
-        }
+        cropWidth = cropWidth.coerceAtLeast(1)
+        cropHeight = cropHeight.coerceAtLeast(1)
+
+        val cropBitmap = Bitmap.createBitmap(
+            scaledBitmap,
+            cropLeft,
+            cropTop,
+            cropWidth,
+            cropHeight
+        )
 
         if (cropType == CropType.SQUARE || cropType == CropType.PROFILE_CIRCLE) {
-            // Will scale the bitmap in square shape.
-            return Bitmap.createScaledBitmap(
-                cropBitmap,
-                maxSquareLimit.toInt(),
-                maxSquareLimit.toInt(),
-                true
-            )
+            return cropBitmap.scale(maxSquareLimit.toInt(), maxSquareLimit.toInt())
         }
 
-        // Scale the cropped bitmap to match the canvas size.
-        return Bitmap.createScaledBitmap(cropBitmap, canvasWidth, canvasHeight, true)
+        return cropBitmap.scale(canvasWidth, canvasHeight)
     }
 
     /**
@@ -742,32 +882,28 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
     public fun cropSourceImage(): Bitmap {
         val sourceBitmap = bitmapImage ?: mBitmapImage
 
-        // Get crop rectangle in canvas coordinates
         val canvasCropRect = getRectFromPoints()
 
-        // If canvas size is invalid, just return the source bitmap
         if (canvasSize.width <= 0f || canvasSize.height <= 0f) {
             return sourceBitmap
         }
 
-        // Calculate scale factors between source bitmap and canvas
+        // Map crop rect corners through inverse zoom transform
+        val topLeftImage = canvasPointToImagePoint(Offset(canvasCropRect.left, canvasCropRect.top))
+        val bottomRightImage = canvasPointToImagePoint(Offset(canvasCropRect.right, canvasCropRect.bottom))
+
+        // Scale from canvas coords to source bitmap coords
         val scaleX = sourceBitmap.width.toFloat() / canvasSize.width
         val scaleY = sourceBitmap.height.toFloat() / canvasSize.height
 
-        // Translate the canvas crop rectangle to source bitmap coordinates
-        var sourceCropLeft = (canvasCropRect.left * scaleX).toInt()
-        var sourceCropTop = (canvasCropRect.top * scaleY).toInt()
-        var sourceCropWidth = (canvasCropRect.width * scaleX).toInt()
-        var sourceCropHeight = (canvasCropRect.height * scaleY).toInt()
+        val sourceCropLeft = (topLeftImage.x * scaleX).toInt().coerceAtLeast(0)
+        val sourceCropTop = (topLeftImage.y * scaleY).toInt().coerceAtLeast(0)
+        var sourceCropWidth = ((bottomRightImage.x - topLeftImage.x) * scaleX).toInt()
+        var sourceCropHeight = ((bottomRightImage.y - topLeftImage.y) * scaleY).toInt()
 
-        // Validate and adjust crop coordinates against the source bitmap dimensions to prevent IndexOutOfBounds
-        // when creating the final bitmap
-        sourceCropLeft = sourceCropLeft.coerceAtLeast(0)
-        sourceCropTop = sourceCropTop.coerceAtLeast(0)
         sourceCropWidth = sourceCropWidth.coerceAtMost(sourceBitmap.width - sourceCropLeft)
         sourceCropHeight = sourceCropHeight.coerceAtMost(sourceBitmap.height - sourceCropTop)
 
-        // If final crop width or height is invalid, just return the source bitmap
         if (sourceCropWidth <= 0 || sourceCropHeight <= 0) {
             return sourceBitmap
         }
