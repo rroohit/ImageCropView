@@ -7,7 +7,7 @@ mavenPublishing {
     publishToMavenCentral()
     signAllPublications()
 
-    coordinates(group.toString(), "cropview", version.toString())
+    coordinates(group.toString(), "ImageCropView", version.toString())
 
     pom {
         description = "Jetpack Compose Image Crop View."

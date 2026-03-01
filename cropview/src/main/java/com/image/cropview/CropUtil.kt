@@ -136,19 +136,27 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
         // Irect resetting
         val canWidth = canvasSize.width
         val canHeight = canvasSize.height
+        val currentType = getCurrCropType()
 
-        if (getCurrCropType() == CropType.SQUARE ||
-            getCurrCropType() == CropType.PROFILE_CIRCLE
-        ) {
-            // Square style Rect positioning
-            val squareSize = getSquareSize(canWidth, canHeight)
-            irectTopleft = getSquarePosition(canWidth, canHeight, squareSize.width)
-            iRect = IRect(topLeft = irectTopleft, size = squareSize)
-
-        } else { // For free style crop
-            // Free style Rect positioning
-            irectTopleft = Offset(x = 0.0F, y = 0.0F)
-            iRect = IRect(topLeft = irectTopleft, size = Size(canWidth, canHeight))
+        when {
+            currentType == CropType.SQUARE || currentType == CropType.PROFILE_CIRCLE -> {
+                // Square style Rect positioning
+                val squareSize = getSquareSize(canWidth, canHeight)
+                irectTopleft = getSquarePosition(canWidth, canHeight, squareSize.width)
+                iRect = IRect(topLeft = irectTopleft, size = squareSize)
+            }
+            currentType.aspectRatio() != null -> {
+                // Fixed aspect ratio Rect positioning
+                val ratio = currentType.aspectRatio()!!
+                val ratioSize = getAspectRatioSize(canWidth, canHeight, ratio)
+                irectTopleft = getCenteredPosition(canWidth, canHeight, ratioSize)
+                iRect = IRect(topLeft = irectTopleft, size = ratioSize)
+            }
+            else -> {
+                // Free style Rect positioning
+                irectTopleft = Offset(x = 0.0F, y = 0.0F)
+                iRect = IRect(topLeft = irectTopleft, size = Size(canWidth, canHeight))
+            }
         }
 
         updateTouchRect()
@@ -164,6 +172,82 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
         val x = (width - squareSize) / 2
         val y = (height - squareSize) / 2
         return Offset(x, y)
+    }
+
+    /**
+     *  - Computes the largest rectangle with the given aspect [ratio] that fits within the
+     *      canvas after subtracting a fixed padding (100px total). The padding keeps the initial
+     *      crop rectangle slightly inset from the canvas edges, consistent with the square-type
+     *      behaviour in [getSquareSize].
+     *
+     *  @param canvasWidth  Width of the canvas in pixels.
+     *  @param canvasHeight Height of the canvas in pixels.
+     *  @param ratio        The desired width-to-height aspect ratio (e.g. 16f / 9f).
+     *  @return A [Size] whose width / height equals [ratio], fitting within the available area.
+     */
+    private fun getAspectRatioSize(canvasWidth: Float, canvasHeight: Float, ratio: Float): Size {
+        val padding = 100F
+        val availableWidth = canvasWidth - padding
+        val availableHeight = canvasHeight - padding
+
+        val width: Float
+        val height: Float
+        if (availableWidth / availableHeight > ratio) {
+            // Canvas is wider than ratio requires – constrain by height
+            height = availableHeight
+            width = height * ratio
+        } else {
+            // Canvas is taller than ratio requires – constrain by width
+            width = availableWidth
+            height = width / ratio
+        }
+        return Size(width, height)
+    }
+
+    /**
+     *  - Returns the top-left [Offset] needed to centre a rectangle of the given [size]
+     *      within a canvas of dimensions [canvasWidth] x [canvasHeight].
+     *
+     *  @param canvasWidth  Width of the canvas in pixels.
+     *  @param canvasHeight Height of the canvas in pixels.
+     *  @param size         The size of the rectangle to centre.
+     *  @return The centering [Offset].
+     */
+    private fun getCenteredPosition(canvasWidth: Float, canvasHeight: Float, size: Size): Offset {
+        val x = (canvasWidth - size.width) / 2
+        val y = (canvasHeight - size.height) / 2
+        return Offset(x, y)
+    }
+
+    /**
+     *  - Constrains a proposed width and height so they satisfy the given aspect [ratio].
+     *
+     *  The smaller dimension (relative to the ratio) is taken as the constraining
+     *  dimension and the other is derived from it. Both dimensions are clamped to
+     *  at least [minLimit] so the crop rectangle never becomes too small to interact with.
+     *
+     *  @param proposedWidth  The unconstrained width from the drag operation.
+     *  @param proposedHeight The unconstrained height from the drag operation.
+     *  @param ratio          The desired width-to-height aspect ratio.
+     *  @return A [Pair] of (width, height) that satisfies the aspect ratio.
+     */
+    private fun constrainToAspectRatio(
+        proposedWidth: Float,
+        proposedHeight: Float,
+        ratio: Float
+    ): Pair<Float, Float> {
+        val w: Float
+        val h: Float
+        if (proposedWidth / ratio <= proposedHeight) {
+            // Width is the constraining dimension
+            w = proposedWidth.coerceAtLeast(minLimit)
+            h = (w / ratio).coerceAtLeast(minLimit)
+        } else {
+            // Height is the constraining dimension
+            h = proposedHeight.coerceAtLeast(minLimit)
+            w = (h * ratio).coerceAtLeast(minLimit)
+        }
+        return w to h
     }
 
     /**
@@ -467,8 +551,8 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
             val newWidth = fixedRight - newX
             val newHeight = fixedBottom - newY
 
-            val sizeOfIRect = when (cropType) {
-                CropType.PROFILE_CIRCLE, CropType.SQUARE -> {
+            val sizeOfIRect = when {
+                cropType == CropType.PROFILE_CIRCLE || cropType == CropType.SQUARE -> {
                     // For square, use the smaller dimension change
                     val sqSide = min(newWidth, newHeight).coerceAtLeast(minLimit)
                     // Adjust top-left to maintain square from fixed bottom-right
@@ -486,7 +570,22 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
                     newY = fixedBottom - finalSide
                     Size(width = finalSide, height = finalSide)
                 }
-
+                cropType?.aspectRatio() != null -> {
+                    // Aspect ratio: constrain dimensions to the ratio, then reposition
+                    // top-left from the fixed bottom-right anchor, clamping to canvas bounds.
+                    val ratio = cropType!!.aspectRatio()!!
+                    val (w, h) = constrainToAspectRatio(newWidth, newHeight, ratio)
+                    newX = (fixedRight - w).coerceAtLeast(0f)
+                    newY = (fixedBottom - h).coerceAtLeast(0f)
+                    // Re-derive size after canvas-edge clamping to preserve the ratio
+                    val clampedW = fixedRight - newX
+                    val clampedH = fixedBottom - newY
+                    val fitW = min(clampedW, clampedH * ratio)
+                    val fitH = fitW / ratio
+                    newX = fixedRight - fitW
+                    newY = fixedBottom - fitH
+                    Size(width = fitW, height = fitH)
+                }
                 else -> { // Free style
                     Size(width = newWidth, height = newHeight)
                 }
@@ -545,8 +644,8 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
             val newWidth = newRight - fixedLeft
             val newHeight = fixedBottom - newTop
 
-            val sizeOfIRect = when (cropType) {
-                CropType.PROFILE_CIRCLE, CropType.SQUARE -> {
+            val sizeOfIRect = when {
+                cropType == CropType.PROFILE_CIRCLE || cropType == CropType.SQUARE -> {
                     // For square, use the smaller dimension change
                     val sqSide = min(newWidth, newHeight).coerceAtLeast(minLimit)
                     // Adjust to maintain square from fixed bottom-left
@@ -560,7 +659,20 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
                     newTop = fixedBottom - finalSide
                     Size(width = finalSide, height = finalSide)
                 }
-
+                cropType?.aspectRatio() != null -> {
+                    // Aspect ratio: constrain dimensions, then reposition the top edge
+                    // from the fixed bottom-left anchor, clamping to canvas bounds.
+                    val ratio = cropType!!.aspectRatio()!!
+                    val (w, h) = constrainToAspectRatio(newWidth, newHeight, ratio)
+                    newTop = (fixedBottom - h).coerceAtLeast(0f)
+                    // Re-derive size after canvas-edge clamping to preserve the ratio
+                    val clampedH = fixedBottom - newTop
+                    val clampedW = min(w, canvasWidth - fixedLeft)
+                    val fitW = min(clampedW, clampedH * ratio)
+                    val fitH = fitW / ratio
+                    newTop = fixedBottom - fitH
+                    Size(width = fitW, height = fitH)
+                }
                 else -> { // Free style
                     Size(width = newWidth, height = newHeight)
                 }
@@ -602,8 +714,8 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
             val newWidth = fixedRight - newLeft
             val newHeight = newBottom - fixedTop
 
-            val sizeOfIRect = when (cropType) {
-                CropType.PROFILE_CIRCLE, CropType.SQUARE -> {
+            val sizeOfIRect = when {
+                cropType == CropType.PROFILE_CIRCLE || cropType == CropType.SQUARE -> {
                     // For square, use the smaller dimension change
                     val sqSide = min(newWidth, newHeight).coerceAtLeast(minLimit)
                     // Adjust to maintain square from fixed top-right
@@ -617,7 +729,20 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
                     newLeft = fixedRight - finalSide
                     Size(width = finalSide, height = finalSide)
                 }
-
+                cropType?.aspectRatio() != null -> {
+                    // Aspect ratio: constrain dimensions, then reposition the left edge
+                    // from the fixed top-right anchor, clamping to canvas bounds.
+                    val ratio = cropType!!.aspectRatio()!!
+                    val (w, h) = constrainToAspectRatio(newWidth, newHeight, ratio)
+                    newLeft = (fixedRight - w).coerceAtLeast(0f)
+                    // Re-derive size after canvas-edge clamping to preserve the ratio
+                    val clampedW = fixedRight - newLeft
+                    val clampedH = min(h, canvasHeight - fixedTop)
+                    val fitH = min(clampedH, clampedW / ratio)
+                    val fitW = fitH * ratio
+                    newLeft = fixedRight - fitW
+                    Size(width = fitW, height = fitH)
+                }
                 else -> { // Free style
                     Size(width = newWidth, height = newHeight)
                 }
@@ -659,13 +784,24 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
             val newWidth = newRight - fixedLeft
             val newHeight = newBottom - fixedTop
 
-            val sizeOfIRect = when (cropType) {
-                CropType.PROFILE_CIRCLE, CropType.SQUARE -> {
+            val sizeOfIRect = when {
+                cropType == CropType.PROFILE_CIRCLE || cropType == CropType.SQUARE -> {
                     // For square, use the smaller dimension
                     val sqSide = min(newWidth, newHeight).coerceAtLeast(minLimit)
                     Size(width = sqSide, height = sqSide)
                 }
-
+                cropType?.aspectRatio() != null -> {
+                    // Aspect ratio: constrain dimensions, clamping to the canvas bounds
+                    // from the fixed top-left anchor. Top-left stays fixed; only size changes.
+                    val ratio = cropType!!.aspectRatio()!!
+                    val (w, h) = constrainToAspectRatio(newWidth, newHeight, ratio)
+                    val fitW = min(w, canvasWidth - fixedLeft)
+                    val fitH = min(h, canvasHeight - fixedTop)
+                    // Re-derive from the constraining dimension to preserve the ratio
+                    val finalW = min(fitW, fitH * ratio)
+                    val finalH = finalW / ratio
+                    Size(width = finalW, height = finalH)
+                }
                 else -> { // Free style
                     Size(width = newWidth, height = newHeight)
                 }
@@ -866,6 +1002,28 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
 
         if (cropType == CropType.SQUARE || cropType == CropType.PROFILE_CIRCLE) {
             return cropBitmap.scale(maxSquareLimit.toInt(), maxSquareLimit.toInt())
+        }
+
+        // For aspect-ratio types, scale the cropped bitmap proportionally so the output
+        // preserves the selected ratio. Without this the bitmap would be stretched to the
+        // full canvas dimensions (canvasWidth x canvasHeight), distorting the image.
+        if (cropType?.aspectRatio() != null) {
+            val ratio = cropType!!.aspectRatio()!!
+            val targetWidth: Int
+            val targetHeight: Int
+            if (canvasWidth.toFloat() / canvasHeight.toFloat() > ratio) {
+                // Canvas is wider than the ratio – constrain by height
+                targetHeight = canvasHeight
+                targetWidth = (canvasHeight * ratio).toInt()
+            } else {
+                // Canvas is taller than the ratio – constrain by width
+                targetWidth = canvasWidth
+                targetHeight = (canvasWidth / ratio).toInt()
+            }
+            return cropBitmap.scale(
+                targetWidth.coerceAtLeast(1),
+                targetHeight.coerceAtLeast(1)
+            )
         }
 
         return cropBitmap.scale(canvasWidth, canvasHeight)
