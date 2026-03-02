@@ -12,7 +12,7 @@ https://github.com/rroohit/ImageCropView/assets/36406595/92906b61-277a-4bd6-a814
 ## Setup
 
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.rroohit/ImageCropView/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.github.rroohit/ImageCropView)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.rroohit/ImageCropView?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.rroohit/ImageCropView)
 
 Add this dependency to your **module-level** `build.gradle` in `dependencies` section :
 
