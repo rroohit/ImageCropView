@@ -1,0 +1,17 @@
+# Gradle
+.gradle/
+build/
+**/build/
+
+# Local configuration — never commit
+local.properties
+
+# IDE — machine-specific, generated on open
+.idea/
+
+# Kotlin sessions
+.kotlin/
+
+# OS
+.DS_Store
+Thumbs.db
