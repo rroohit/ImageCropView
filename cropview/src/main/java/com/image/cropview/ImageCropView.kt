@@ -9,10 +9,11 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -89,13 +90,21 @@ public class ImageCrop(
         enableZoom: Boolean = false
     ) {
 
-        // Persist crop + zoom state across Activity recreation using rememberSaveable.
-        // An empty FloatArray is the "nothing saved" sentinel (FloatArray is Bundle-safe).
-        val savedCropState = rememberSaveable { mutableStateOf(FloatArray(0)) }
-
-        // Save state just before the composition is torn down (Activity recreated / process death).
-        DisposableEffect(Unit) {
-            onDispose { savedCropState.value = cropU.saveState() ?: FloatArray(0) }
+        // Persist crop + zoom state across Activity recreation.
+        //
+        // Timing problem with DisposableEffect:
+        //   onSaveInstanceState  ← rememberSaveable snapshots its MutableState HERE
+        //     → onStop → onDestroy  ← onDispose fires HERE — state already saved as stale
+        //
+        // Solution: use SideEffect (runs after every successful composition commit) to keep
+        // a rememberSaveable-backed MutableState in sync with the live cropU state. By the
+        // time onSaveInstanceState fires the MutableState always holds the latest crop data.
+        //
+        // Convention: empty FloatArray(0) = nothing to restore (canvas never laid out).
+        var savedCropState by rememberSaveable { mutableStateOf(FloatArray(0)) }
+        SideEffect {
+            val current = cropU.saveState() ?: return@SideEffect
+            if (!current.contentEquals(savedCropState)) savedCropState = current
         }
 
         if (cropU.cropType == null || cropType != cropU.cropType) {
@@ -121,13 +130,12 @@ public class ImageCrop(
                 modifier = Modifier
                     .size(width = targetWidth, height = targetHeight)
                     .onSizeChanged { intSize ->
-                        val saved = savedCropState.value
+                        val saved = savedCropState
                         if (saved.isNotEmpty() && cropU.canvasSize.width == 0f) {
                             // Activity was recreated — restore saved state and rescale to
                             // the new canvas dimensions instead of resetting to defaults.
                             val newCanvas = CanvasSize(intSize.width.toFloat(), intSize.height.toFloat())
                             cropU.restoreState(saved, newCanvas)
-                            savedCropState.value = FloatArray(0)  // consume
                         } else {
                             cropU.onCanvasSizeChanged(intSize = intSize)
                         }
