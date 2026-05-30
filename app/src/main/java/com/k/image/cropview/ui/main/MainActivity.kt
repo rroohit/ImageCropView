@@ -47,6 +47,8 @@ import coil.compose.AsyncImage
 import com.image.cropview.CropType
 import com.image.cropview.EdgeType
 import com.image.cropview.ImageCrop
+import com.image.cropview.ImageCropView
+import com.image.cropview.rememberSaveableImageCrop
 import com.k.image.cropview.R
 import com.k.image.cropview.ui.components.ImageItem
 import com.k.image.cropview.ui.components.ItemIcon
@@ -56,7 +58,9 @@ import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
-    private lateinit var imageCrop: ImageCrop
+    // Holds the active ImageCrop so button click handlers outside the composition
+    // can call onCrop() and resetView() without passing state through lambdas.
+    private var imageCrop: ImageCrop? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -124,8 +128,10 @@ class MainActivity : ComponentActivity() {
                             }
 
                             bitmap.value?.let { bm ->
-                                imageCrop = ImageCrop(bitmapImage = bm)
-                                imageCrop.ImageCropView(
+                                val cropState = rememberSaveableImageCrop(bitmap = bm)
+                                imageCrop = cropState
+                                ImageCropView(
+                                    imageCrop = cropState,
                                     modifier = Modifier.fillMaxSize(),
                                     guideLineColor = Color.LightGray,
                                     guideLineWidth = 2.dp,
@@ -237,7 +243,7 @@ class MainActivity : ComponentActivity() {
                                     .padding(start = 2.dp, end = 2.dp),
                                 onClick = {
                                     showProgressBarState.value = true
-                                    imageCrop.resetView()
+                                    imageCrop?.resetView()
                                     viewModel.getBitmapFromUrl(context)
                                 }
                             ) {
@@ -254,7 +260,7 @@ class MainActivity : ComponentActivity() {
                                     .weight(2F)
                                     .padding(start = 2.dp, end = 2.dp),
                                 onClick = {
-                                    imageCrop.resetView()
+                                    imageCrop?.resetView()
                                 }
                             ) {
                                 Text(
@@ -270,7 +276,7 @@ class MainActivity : ComponentActivity() {
                                     .weight(2F)
                                     .padding(start = 2.dp, end = 2.dp),
                                 onClick = {
-                                    val b = imageCrop.onCrop()
+                                    val b = imageCrop?.onCrop()
                                     croppedImage.value = b
                                     croppedImage.value?.let { bm ->
                                         viewModel.onEvent(
