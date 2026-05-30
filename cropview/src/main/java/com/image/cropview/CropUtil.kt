@@ -117,103 +117,15 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
 
     /**
      *  - Handles the event when the canvas size is changed.
-     *
-     *  On the first call (canvas was 0×0) the crop rect and zoom are initialised from scratch.
-     *  On every subsequent call (e.g. orientation change) the existing crop rect and zoom offset
-     *  are rescaled proportionally to the new canvas dimensions so the user's selection is
-     *  preserved across rotations — even when the Activity is not recreated.
+     *      Updates the internal canvasSize property with the new dimensions and
+     *      resets the crop rectangle (iRect) accordingly.
      *
      *  @param intSize The new size of the canvas as an [IntSize] object.
      */
     public fun onCanvasSizeChanged(intSize: IntSize) {
-        val newCanvasSize = CanvasSize(intSize.width.toFloat(), intSize.height.toFloat())
-        if (canvasSize.width == 0f || canvasSize.height == 0f) {
-            // First layout — initialize from scratch
-            canvasSize = newCanvasSize
-            resetZoom()
-            resetCropIRect()
-        } else {
-            // Canvas resized (e.g. orientation change) — rescale existing state
-            rescaleToNewCanvas(newCanvasSize)
-        }
-    }
-
-    /**
-     * Rescales the crop rect and zoom offset to [newSize] while preserving the user's
-     * selection as closely as possible.
-     *
-     * - FREE_STYLE: each dimension scales independently.
-     * - SQUARE / PROFILE_CIRCLE: the side length is preserved as a fraction of
-     *   min(canvas dimension); the crop rect stays centred on the same relative point.
-     * - Fixed aspect-ratio types: the height is preserved as a fraction of the canvas
-     *   height and the width is re-derived from the ratio; the rect stays centred on the
-     *   same relative point.
-     * - Zoom offset scales proportionally; zoom scale is dimensionless and unchanged.
-     */
-    private fun rescaleToNewCanvas(newSize: CanvasSize) {
-        val oldW = canvasSize.width
-        val oldH = canvasSize.height
-        val newW = newSize.width
-        val newH = newSize.height
-
-        // Normalised center of the current crop rect (0..1 relative to old canvas)
-        val centerXNorm = (irectTopleft.x + iRect.size.width / 2f) / oldW
-        val centerYNorm = (irectTopleft.y + iRect.size.height / 2f) / oldH
-
-        // Update canvas size before calling any helpers that read canvasSize
-        canvasSize = newSize
-
-        val newCenterX = centerXNorm * newW
-        val newCenterY = centerYNorm * newH
-
-        val currentType = getCurrCropType()
-
-        when {
-            currentType == CropType.SQUARE || currentType == CropType.PROFILE_CIRCLE -> {
-                // Preserve side as a fraction of min(canvas), clamped to the new limits
-                maxSquareLimit = min(newW, newH)   // updates minSquareLimit via the setter
-                val sideFraction = iRect.size.width / min(oldW, oldH)
-                val newSide = (sideFraction * min(newW, newH)).coerceIn(minSquareLimit, maxSquareLimit)
-                val newTopLeftX = (newCenterX - newSide / 2f).coerceIn(0f, newW - newSide)
-                val newTopLeftY = (newCenterY - newSide / 2f).coerceIn(0f, newH - newSide)
-                irectTopleft = Offset(newTopLeftX, newTopLeftY)
-                iRect = IRect(topLeft = irectTopleft, size = Size(newSide, newSide))
-            }
-            currentType.aspectRatio() != null -> {
-                val ratio = currentType.aspectRatio()!!
-                // Preserve height as a fraction of canvas height, re-derive width from ratio
-                val heightFraction = iRect.size.height / oldH
-                var newRectH = (heightFraction * newH).coerceAtLeast(minLimit)
-                var newRectW = newRectH * ratio
-                // Clamp to canvas bounds (leave a 2 % margin to avoid edge hugging)
-                if (newRectW > newW * 0.98f) { newRectW = newW * 0.98f; newRectH = newRectW / ratio }
-                if (newRectH > newH * 0.98f) { newRectH = newH * 0.98f; newRectW = newRectH * ratio }
-                val newTopLeftX = (newCenterX - newRectW / 2f).coerceIn(0f, (newW - newRectW).coerceAtLeast(0f))
-                val newTopLeftY = (newCenterY - newRectH / 2f).coerceIn(0f, (newH - newRectH).coerceAtLeast(0f))
-                irectTopleft = Offset(newTopLeftX, newTopLeftY)
-                iRect = IRect(topLeft = irectTopleft, size = Size(newRectW, newRectH))
-            }
-            else -> {
-                // FREE_STYLE: scale each dimension independently
-                val wFraction = iRect.size.width / oldW
-                val hFraction = iRect.size.height / oldH
-                val newRectW = (wFraction * newW).coerceAtLeast(minLimit)
-                val newRectH = (hFraction * newH).coerceAtLeast(minLimit)
-                val newTopLeftX = (newCenterX - newRectW / 2f).coerceIn(0f, (newW - newRectW).coerceAtLeast(0f))
-                val newTopLeftY = (newCenterY - newRectH / 2f).coerceIn(0f, (newH - newRectH).coerceAtLeast(0f))
-                irectTopleft = Offset(newTopLeftX, newTopLeftY)
-                iRect = IRect(topLeft = irectTopleft, size = Size(newRectW, newRectH))
-            }
-        }
-
-        // Rescale zoom offset proportionally and re-constrain to the new canvas bounds.
-        // zoomScale is dimensionless and requires no rescaling.
-        zoomOffset = constrainOffset(
-            Offset(x = zoomOffset.x * (newW / oldW), y = zoomOffset.y * (newH / oldH)),
-            zoomScale
-        )
-
-        updateTouchRect()
+        canvasSize = CanvasSize(intSize.width.toFloat(), intSize.height.toFloat())
+        resetZoom()
+        resetCropIRect()
     }
 
     /**
@@ -1166,50 +1078,6 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
     public fun updateCropType(type: CropType) {
         cropType = type
         resetCropIRect()
-    }
-
-    /**
-     * Captures the current crop rect, canvas size, and zoom state as a flat [FloatArray].
-     * Returns null if the canvas has not been laid out yet (size is still 0×0).
-     *
-     * Format: [bitmapW, bitmapH, topLeftX, topLeftY, rectW, rectH, canvasW, canvasH,
-     *          zoomScale, zoomOffsetX, zoomOffsetY]
-     *
-     * Pass the result to [restoreState] on a new [CropUtil] to reconstruct the user's
-     * selection after an Activity recreation.
-     */
-    internal fun saveState(): FloatArray? {
-        if (canvasSize.width == 0f || canvasSize.height == 0f) return null
-        return floatArrayOf(
-            mBitmapImage.width.toFloat(), mBitmapImage.height.toFloat(),
-            irectTopleft.x, irectTopleft.y,
-            iRect.size.width, iRect.size.height,
-            canvasSize.width, canvasSize.height,
-            zoomScale,
-            zoomOffset.x, zoomOffset.y
-        )
-    }
-
-    /**
-     * Restores a state previously captured by [saveState] and adapts it to [newCanvasSize].
-     *
-     * The restore is silently skipped if the saved state was for a bitmap with different
-     * dimensions than the current [mBitmapImage], which ensures a new image loaded after
-     * recreation does not inherit the previous image's crop position.
-     *
-     * Internally rebuilds the saved geometry and then calls [rescaleToNewCanvas] so all
-     * crop-type constraints (square, fixed aspect-ratio, etc.) are correctly re-applied
-     * for the new canvas dimensions.
-     */
-    internal fun restoreState(state: FloatArray, newCanvasSize: CanvasSize) {
-        if (state.size < 11) return
-        if (state[0] != mBitmapImage.width.toFloat() || state[1] != mBitmapImage.height.toFloat()) return
-        irectTopleft = Offset(state[2], state[3])
-        iRect = IRect(topLeft = irectTopleft, size = Size(state[4], state[5]))
-        canvasSize = CanvasSize(state[6], state[7])
-        zoomScale = state[8]
-        zoomOffset = Offset(state[9], state[10])
-        rescaleToNewCanvas(newCanvasSize)
     }
 
     private fun getCurrCropType(): CropType {

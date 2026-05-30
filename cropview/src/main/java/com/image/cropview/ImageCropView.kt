@@ -9,11 +9,9 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -45,10 +43,8 @@ public class ImageCrop(
 
     /**
      * The internal [CropUtil] instance responsible for handling dragging and cropping events.
-     * Initialized eagerly so that holding [ImageCrop] in a ViewModel preserves all crop and
-     * zoom state across Activity recreation — no `remember` is needed inside the composable.
      */
-    private val cropU: CropUtil = CropUtil(bitmapImage)
+    private lateinit var cropU: CropUtil
 
     /**
      * Timestamp of the most recent confirmed single tap, used for double-tap detection.
@@ -90,22 +86,8 @@ public class ImageCrop(
         enableZoom: Boolean = false
     ) {
 
-        // Persist crop + zoom state across Activity recreation.
-        //
-        // Timing problem with DisposableEffect:
-        //   onSaveInstanceState  ← rememberSaveable snapshots its MutableState HERE
-        //     → onStop → onDestroy  ← onDispose fires HERE — state already saved as stale
-        //
-        // Solution: use SideEffect (runs after every successful composition commit) to keep
-        // a rememberSaveable-backed MutableState in sync with the live cropU state. By the
-        // time onSaveInstanceState fires the MutableState always holds the latest crop data.
-        //
-        // Convention: empty FloatArray(0) = nothing to restore (canvas never laid out).
-        var savedCropState by rememberSaveable { mutableStateOf(FloatArray(0)) }
-        SideEffect {
-            val current = cropU.saveState() ?: return@SideEffect
-            if (!current.contentEquals(savedCropState)) savedCropState = current
-        }
+        val cropUtil by remember { mutableStateOf(CropUtil(bitmapImage)) }
+        cropU = cropUtil
 
         if (cropU.cropType == null || cropType != cropU.cropType) {
             cropU.updateCropType(cropType)
@@ -130,30 +112,22 @@ public class ImageCrop(
                 modifier = Modifier
                     .size(width = targetWidth, height = targetHeight)
                     .onSizeChanged { intSize ->
-                        val saved = savedCropState
-                        if (saved.isNotEmpty() && cropU.canvasSize.width == 0f) {
-                            // Activity was recreated — restore saved state and rescale to
-                            // the new canvas dimensions instead of resetting to defaults.
-                            val newCanvas = CanvasSize(intSize.width.toFloat(), intSize.height.toFloat())
-                            cropU.restoreState(saved, newCanvas)
-                        } else {
-                            cropU.onCanvasSizeChanged(intSize = intSize)
-                        }
+                        cropUtil.onCanvasSizeChanged(intSize = intSize)
                     }
                     .pointerInput(enableZoom) {
                         if (!enableZoom) {
                             // Original single-gesture behavior, unchanged
                             detectDragGestures(
                                 onDragStart = { touchPoint ->
-                                    cropU.onDragStart(touchPoint)
+                                    cropUtil.onDragStart(touchPoint)
                                 },
                                 onDrag = { pointerInputChange, _ ->
                                     pointerInputChange.consume()
                                     val dragPoint = pointerInputChange.position
-                                    cropU.onDrag(dragPoint)
+                                    cropUtil.onDrag(dragPoint)
                                 },
                                 onDragEnd = {
-                                    cropU.onDragEnd()
+                                    cropUtil.onDragEnd()
                                 }
                             )
                         } else {
@@ -177,18 +151,18 @@ public class ImageCrop(
                                 val downPosition = firstDown.position
 
                                 // Determine the initial mode from the touch position
-                                val touchOnCropRect = cropU.isTouchOnCropRect(downPosition)
-                                val zoomed = cropU.zoomScale > 1.0f
+                                val touchOnCropRect = cropUtil.isTouchOnCropRect(downPosition)
+                                val zoomed = cropUtil.zoomScale > 1.0f
 
                                 // 0 = IDLE, 1 = CROP_DRAG, 2 = IMAGE_PAN, 3 = ZOOM
                                 var gestureMode: Int
                                 when {
                                     touchOnCropRect -> {
-                                        cropU.onDragStart(downPosition)
+                                        cropUtil.onDragStart(downPosition)
                                         gestureMode = 1 // CROP_DRAG
                                     }
                                     zoomed -> {
-                                        cropU.onImagePanStart(downPosition)
+                                        cropUtil.onImagePanStart(downPosition)
                                         gestureMode = 2 // IMAGE_PAN
                                     }
                                     else -> {
@@ -210,8 +184,8 @@ public class ImageCrop(
                                     // All fingers lifted
                                     if (changes.all { !it.pressed }) {
                                         when (gestureMode) {
-                                            1 -> cropU.onDragEnd()        // CROP_DRAG
-                                            2 -> cropU.onImagePanEnd()    // IMAGE_PAN
+                                            1 -> cropUtil.onDragEnd()        // CROP_DRAG
+                                            2 -> cropUtil.onImagePanEnd()    // IMAGE_PAN
                                         }
 
                                         // Double-tap detection: only fires for quick taps without movement
@@ -227,7 +201,7 @@ public class ImageCrop(
                                                     distFromLast < doubleTapRadiusPx
                                                 ) {
                                                     // Confirmed double-tap
-                                                    cropU.onDoubleTapZoom(downPosition)
+                                                    cropUtil.onDoubleTapZoom(downPosition)
                                                     lastTapTime = 0L
                                                 } else {
                                                     // First tap of a potential double-tap
@@ -244,8 +218,8 @@ public class ImageCrop(
 
                                     if (fingerCount >= 2) {
                                         // Transition into zoom mode
-                                        if (gestureMode == 1) cropU.onDragEnd()
-                                        if (gestureMode == 2) cropU.onImagePanEnd()
+                                        if (gestureMode == 1) cropUtil.onDragEnd()
+                                        if (gestureMode == 2) cropUtil.onImagePanEnd()
                                         gestureMode = 3 // ZOOM
 
                                         val currentPositions = activeChanges.map { it.position }
@@ -268,7 +242,7 @@ public class ImageCrop(
                                                 1f
                                             }
                                             val panChange = currentCentroid - previousCentroid
-                                            cropU.onZoomChange(currentCentroid, scaleChange, panChange)
+                                            cropUtil.onZoomChange(currentCentroid, scaleChange, panChange)
 
                                             previousCentroid = currentCentroid
                                             previousCentroidDistance = currentDistance
@@ -293,11 +267,11 @@ public class ImageCrop(
                                             hasMoved = true
                                             when (gestureMode) {
                                                 1 -> { // CROP_DRAG
-                                                    cropU.onDrag(change.position)
+                                                    cropUtil.onDrag(change.position)
                                                     change.consume()
                                                 }
                                                 2 -> { // IMAGE_PAN
-                                                    cropU.onImagePanDrag(change.position)
+                                                    cropUtil.onImagePanDrag(change.position)
                                                     change.consume()
                                                 }
                                                 0 -> { // IDLE - finger was outside crop rect at 1x zoom
@@ -321,16 +295,16 @@ public class ImageCrop(
                         // The transform order is: scale around canvas center, then translate by offset.
                         // A bitmap point b maps to: pivot + scale*(b - pivot) + offset
                         withTransform({
-                            translate(left = cropU.zoomOffset.x, top = cropU.zoomOffset.y)
+                            translate(left = cropUtil.zoomOffset.x, top = cropUtil.zoomOffset.y)
                             scale(
-                                scaleX = cropU.zoomScale,
-                                scaleY = cropU.zoomScale,
+                                scaleX = cropUtil.zoomScale,
+                                scaleY = cropUtil.zoomScale,
                                 pivot = Offset(size.width / 2f, size.height / 2f)
                             )
                         }) {
                             drawBitmap(
                                 bitmap = bitmapImage,
-                                canvasSize = cropU.canvasSize
+                                canvasSize = cropUtil.canvasSize
                             )
                         }
                     }
