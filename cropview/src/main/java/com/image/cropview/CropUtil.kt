@@ -1168,6 +1168,50 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
         resetCropIRect()
     }
 
+    /**
+     * Captures the current crop rect, canvas size, and zoom state as a flat [FloatArray].
+     * Returns null if the canvas has not been laid out yet (size is still 0×0).
+     *
+     * Format: [bitmapW, bitmapH, topLeftX, topLeftY, rectW, rectH, canvasW, canvasH,
+     *          zoomScale, zoomOffsetX, zoomOffsetY]
+     *
+     * Pass the result to [restoreState] on a new [CropUtil] to reconstruct the user's
+     * selection after an Activity recreation.
+     */
+    internal fun saveState(): FloatArray? {
+        if (canvasSize.width == 0f || canvasSize.height == 0f) return null
+        return floatArrayOf(
+            mBitmapImage.width.toFloat(), mBitmapImage.height.toFloat(),
+            irectTopleft.x, irectTopleft.y,
+            iRect.size.width, iRect.size.height,
+            canvasSize.width, canvasSize.height,
+            zoomScale,
+            zoomOffset.x, zoomOffset.y
+        )
+    }
+
+    /**
+     * Restores a state previously captured by [saveState] and adapts it to [newCanvasSize].
+     *
+     * The restore is silently skipped if the saved state was for a bitmap with different
+     * dimensions than the current [mBitmapImage], which ensures a new image loaded after
+     * recreation does not inherit the previous image's crop position.
+     *
+     * Internally rebuilds the saved geometry and then calls [rescaleToNewCanvas] so all
+     * crop-type constraints (square, fixed aspect-ratio, etc.) are correctly re-applied
+     * for the new canvas dimensions.
+     */
+    internal fun restoreState(state: FloatArray, newCanvasSize: CanvasSize) {
+        if (state.size < 11) return
+        if (state[0] != mBitmapImage.width.toFloat() || state[1] != mBitmapImage.height.toFloat()) return
+        irectTopleft = Offset(state[2], state[3])
+        iRect = IRect(topLeft = irectTopleft, size = Size(state[4], state[5]))
+        canvasSize = CanvasSize(state[6], state[7])
+        zoomScale = state[8]
+        zoomOffset = Offset(state[9], state[10])
+        rescaleToNewCanvas(newCanvasSize)
+    }
+
     private fun getCurrCropType(): CropType {
         return cropType ?: CropType.FREE_STYLE
     }

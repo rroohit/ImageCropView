@@ -9,7 +9,10 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -86,6 +89,15 @@ public class ImageCrop(
         enableZoom: Boolean = false
     ) {
 
+        // Persist crop + zoom state across Activity recreation using rememberSaveable.
+        // An empty FloatArray is the "nothing saved" sentinel (FloatArray is Bundle-safe).
+        val savedCropState = rememberSaveable { mutableStateOf(FloatArray(0)) }
+
+        // Save state just before the composition is torn down (Activity recreated / process death).
+        DisposableEffect(Unit) {
+            onDispose { savedCropState.value = cropU.saveState() ?: FloatArray(0) }
+        }
+
         if (cropU.cropType == null || cropType != cropU.cropType) {
             cropU.updateCropType(cropType)
         }
@@ -109,7 +121,16 @@ public class ImageCrop(
                 modifier = Modifier
                     .size(width = targetWidth, height = targetHeight)
                     .onSizeChanged { intSize ->
-                        cropU.onCanvasSizeChanged(intSize = intSize)
+                        val saved = savedCropState.value
+                        if (saved.isNotEmpty() && cropU.canvasSize.width == 0f) {
+                            // Activity was recreated — restore saved state and rescale to
+                            // the new canvas dimensions instead of resetting to defaults.
+                            val newCanvas = CanvasSize(intSize.width.toFloat(), intSize.height.toFloat())
+                            cropU.restoreState(saved, newCanvas)
+                            savedCropState.value = FloatArray(0)  // consume
+                        } else {
+                            cropU.onCanvasSizeChanged(intSize = intSize)
+                        }
                     }
                     .pointerInput(enableZoom) {
                         if (!enableZoom) {
