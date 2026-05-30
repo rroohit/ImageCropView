@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -71,7 +72,9 @@ class MainActivity : ComponentActivity() {
                 viewModel.getBitmapFromUrl(context)
 
                 Surface(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .systemBarsPadding()
+                        .fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
                     val listImages = remember { mutableStateOf<List<Bitmap>>(emptyList()) }
@@ -124,8 +127,9 @@ class MainActivity : ComponentActivity() {
                             }
 
                             bitmap.value?.let { bm ->
-                                imageCrop = ImageCrop(bitmapImage = bm)
-                                imageCrop.ImageCropView(
+                                val imageCropState = remember(bm) { ImageCrop(bitmapImage = bm) }
+                                imageCrop = imageCropState
+                                imageCropState.ImageCropView(
                                     modifier = Modifier.fillMaxSize(),
                                     guideLineColor = Color.LightGray,
                                     guideLineWidth = 2.dp,
