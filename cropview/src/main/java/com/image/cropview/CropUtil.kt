@@ -124,6 +124,14 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
     internal var pendingSnapshot: CropStateSnapshot? = null
 
     /**
+     * Cache of the last valid snapshot (with non-zero canvas size). Used when the Saver's save
+     * lambda is called multiple times—the first call may succeed with valid state, but subsequent
+     * calls during destruction have canvasSize=0x0. This cache ensures we always return a valid
+     * snapshot, even if called during teardown.
+     */
+    private var cachedSnapshot: CropStateSnapshot? = null
+
+    /**
      * Handles the canvas size change event. Three cases are handled:
      *
      * 1. **Pending restore** — a [CropStateSnapshot] is waiting (Activity was recreated).
@@ -136,6 +144,7 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
      * @param intSize The new canvas size reported by [androidx.compose.ui.layout.onSizeChanged].
      */
     public fun onCanvasSizeChanged(intSize: IntSize) {
+        if (intSize.width == 0 || intSize.height == 0) return
         val newCanvasSize = CanvasSize(intSize.width.toFloat(), intSize.height.toFloat())
         val snapshot = pendingSnapshot
         when {
@@ -571,6 +580,7 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
      * Points outside this area (while zoomed) trigger image panning instead.
      */
     public fun isTouchOnCropRect(touchPoint: Offset): Boolean {
+        if (canvasSize.width == 0f || canvasSize.height == 0f) return true
         val cornerPad = paddingForTouchRect * 3f // same as minLimit for corner detection
         val left = iRect.topLeft.x - cornerPad
         val top = iRect.topLeft.y - cornerPad
@@ -1216,8 +1226,10 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
      * to not persist anything for this frame.
      */
     internal fun toSnapshot(): CropStateSnapshot? {
-        if (canvasSize.width == 0f || canvasSize.height == 0f) return null
-        return CropStateSnapshot(
+        if (canvasSize.width == 0f || canvasSize.height == 0f) {
+            return cachedSnapshot
+        }
+        val snapshot = CropStateSnapshot(
             topLeftXRatio    = irectTopleft.x / canvasSize.width,
             topLeftYRatio    = irectTopleft.y / canvasSize.height,
             widthRatio       = iRect.size.width / canvasSize.width,
@@ -1228,6 +1240,8 @@ public class CropUtil constructor(private var mBitmapImage: Bitmap) {
             bitmapWidth      = mBitmapImage.width,
             bitmapHeight     = mBitmapImage.height
         )
+        cachedSnapshot = snapshot
+        return snapshot
     }
 
     private fun getCurrCropType(): CropType {

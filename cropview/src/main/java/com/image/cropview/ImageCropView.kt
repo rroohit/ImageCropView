@@ -81,9 +81,8 @@ public class ImageCrop(
          * Activity recreation via Compose's [rememberSaveable] mechanism.
          *
          * **save** — called by the system during `onSaveInstanceState`; reads the live
-         * [CropUtil] state and serialises it to a [CropStateSnapshot] (a [android.os.Parcelable]).
-         * Returns `null` when the canvas has not been laid out yet, instructing
-         * [rememberSaveable] not to persist anything for this frame.
+         * [CropUtil] state and serialises it to a [CropStateSnapshot]. Returns `null`
+         * when the canvas has not been laid out yet.
          *
          * **restore** — called during the new Activity's composition phase (before the canvas
          * is laid out); creates a fresh [ImageCrop] and pre-loads its [CropUtil] with the
@@ -91,13 +90,16 @@ public class ImageCrop(
          * first time it receives actual canvas dimensions.
          *
          * @param bitmap The bitmap the [ImageCrop] was created with, so the restored instance
-         *               uses the same image. Passed as the [rememberSaveable] input key so the
-         *               saved state is automatically discarded when the bitmap changes.
+         *               uses the same image.
          */
-        public fun saver(bitmap: Bitmap): Saver<ImageCrop, CropStateSnapshot> = Saver(
-            save    = { imageCrop -> imageCrop.cropUtil.toSnapshot() },
-            restore = { snapshot  ->
-                ImageCrop(bitmap).also { it.cropUtil.pendingSnapshot = snapshot }
+        public fun saver(bitmap: Bitmap): Saver<ImageCrop, Any> = Saver(
+            save = { imageCrop -> imageCrop.cropUtil.toSnapshot() },
+            restore = { snapshot ->
+                ImageCrop(bitmap).also { imageCrop ->
+                    if (snapshot is CropStateSnapshot && snapshot.bitmapWidth == bitmap.width && snapshot.bitmapHeight == bitmap.height) {
+                        imageCrop.cropUtil.pendingSnapshot = snapshot
+                    }
+                }
             }
         )
     }
@@ -124,11 +126,12 @@ public fun rememberImageCrop(bitmap: Bitmap): ImageCrop =
  *
  * The crop rectangle, zoom level, and pan offset survive device rotation and other Activity
  * recreation events via Compose's [rememberSaveable] + [ImageCrop.saver] mechanism.
- * The instance is recreated (state reset) whenever [bitmap] changes.
+ * The state persists across rotations; the saver validates bitmap dimensions and resets
+ * state if a different image is loaded.
  */
 @Composable
 public fun rememberSaveableImageCrop(bitmap: Bitmap): ImageCrop =
-    rememberSaveable(bitmap, stateSaver = ImageCrop.saver(bitmap)) { ImageCrop(bitmap) }
+    rememberSaveable(bitmap, saver = ImageCrop.saver(bitmap)) { ImageCrop(bitmap) }
 
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -192,7 +195,7 @@ public fun ImageCropView(
                 .onSizeChanged { intSize ->
                     cropUtil.onCanvasSizeChanged(intSize = intSize)
                 }
-                .pointerInput(enableZoom) {
+                .pointerInput(imageCrop, enableZoom) {
                     // lastTapTime / lastTapPosition live here — they persist across
                     // awaitEachGesture iterations but never trigger recomposition.
                     var lastTapTime = 0L

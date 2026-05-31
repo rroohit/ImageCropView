@@ -68,11 +68,17 @@ class MainActivity : ComponentActivity() {
             val viewModel: MainViewModel by viewModels()
             ImageCropViewTheme {
                 val context = LocalContext.current as Activity
-                val showProgressBarState = remember { mutableStateOf(true) }
+                val showProgressBarState = remember { mutableStateOf(false) }
                 val showImageDialog = remember { mutableStateOf(false) }
                 val croppedImage = remember { mutableStateOf<Bitmap?>(null) }
                 val selectedImage = remember { mutableStateOf<Bitmap?>(null) }
-                viewModel.getBitmapFromUrl(context)
+
+                LaunchedEffect(Unit) {
+                    if (viewModel.currImage.value == null) {
+                        showProgressBarState.value = true
+                        viewModel.getBitmapFromUrl(context)
+                    }
+                }
 
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -244,7 +250,7 @@ class MainActivity : ComponentActivity() {
                                 onClick = {
                                     showProgressBarState.value = true
                                     imageCrop?.resetView()
-                                    viewModel.getBitmapFromUrl(context)
+                                    viewModel.getBitmapFromUrl(context, forceReload = true)
                                 }
                             ) {
                                 Text(

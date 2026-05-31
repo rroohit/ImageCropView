@@ -35,6 +35,8 @@ class MainViewModel : ViewModel() {
     private val _cropType = MutableStateFlow(CropType.FREE_STYLE)
     val cropType get() = _cropType.asStateFlow()
 
+    /** Cache to store bitmaps by URL so the same Bitmap object is reused across rotations. */
+    private val bitmapCache = mutableMapOf<String, Bitmap>()
 
     private var lastUrl = ""
     val imageUrls = listOf(
@@ -115,7 +117,8 @@ class MainViewModel : ViewModel() {
     }
 
 
-    fun getBitmapFromUrl(context: Context) {
+    fun getBitmapFromUrl(context: Context, forceReload: Boolean = false) {
+        if (!forceReload && _currImage.value != null) return
         viewModelScope.launch {
             lastUrl = getRandomUrl()
             val bm = getBitmap(context, lastUrl)
@@ -124,14 +127,20 @@ class MainViewModel : ViewModel() {
     }
 
     private suspend fun getBitmap(context: Context, imageUrl: String): Bitmap? {
+        // Return cached bitmap if available to preserve crop state across rotations
+        bitmapCache[imageUrl]?.let { return it }
+
         val loading = ImageLoader(context)
         val request = ImageRequest.Builder(context)
             .data(imageUrl)
             .build()
 
         val result = (loading.execute(request) as SuccessResult).drawable
+        val bitmap = (result as BitmapDrawable).bitmap
 
-        return (result as BitmapDrawable).bitmap
+        // Cache the bitmap for reuse
+        bitmapCache[imageUrl] = bitmap
+        return bitmap
     }
 
     private fun getRandomUrl(): String {
