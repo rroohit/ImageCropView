@@ -6,7 +6,8 @@ ImageCropView is a Jetpack Compose library that provides a simple and customizab
 It supports various cropping styles such as free-form, square, circular, and fixed aspect-ratio cropping (3:2, 4:3, 16:9, 9:16), pinch-to-zoom, and crop state that survives device rotation — making it easy to integrate image cropping into your Compose UI.
 
 
-https://github.com/rroohit/ImageCropView/assets/36406595/92906b61-277a-4bd6-a814-e3573ae36ee3
+
+https://github.com/user-attachments/assets/0feb8c47-e96c-455a-877a-ffa82378630a
 
 
 ## Features
