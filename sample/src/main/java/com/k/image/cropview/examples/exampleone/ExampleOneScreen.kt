@@ -18,10 +18,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -33,6 +35,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -48,6 +51,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -132,6 +136,12 @@ private fun ExampleOneContent(
             CropTypeChips(
                 currentCropType = uiState.cropType,
                 onCropTypeSelected = { onEvent(ExampleOneEvent.ChangeCropType(it)) },
+            )
+            Spacer(Modifier.height(12.dp))
+            CustomType(
+                currentCropType = uiState.cropType,
+                onCropTypeSelected = { onEvent(ExampleOneEvent.ChangeCropType(it)) },
+                modifier = Modifier.fillMaxWidth(),
             )
             Spacer(Modifier.height(12.dp))
             CropActions(
@@ -235,6 +245,62 @@ private fun CropTypeChips(
             )
         }
     }
+}
+
+@Composable
+fun CustomType(currentCropType: CropType,
+               onCropTypeSelected: (CropType) -> Unit,
+               modifier: Modifier = Modifier,) {
+    val x = remember { mutableStateOf("1") }
+    val y = remember { mutableStateOf("1") }
+    Row(modifier = modifier) {
+        FilterChip(
+            selected =  currentCropType is CropType.CUSTOM_RATIO,
+            onClick = {
+                onCropTypeSelected(x.value, y.value, onCropTypeSelected)
+                      },
+            label = { Text("custom") },
+            modifier= Modifier.align(Alignment.CenterVertically)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+
+        TextField(
+            value = x.value,
+            onValueChange = {
+                x.value = it
+                onCropTypeSelected(x.value, y.value, onCropTypeSelected)
+                            },
+            label = { Text("X") },
+            modifier = Modifier.padding(4.dp).width(80.dp),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Number
+            )
+        )
+        TextField(
+            value = y.value,
+            onValueChange = {
+                y.value = it
+                onCropTypeSelected(x.value, y.value, onCropTypeSelected)
+                            },
+            label = { Text("Y") },
+            modifier = Modifier.padding(4.dp).width(80.dp),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Number
+            )
+        )
+
+    }
+
+}
+
+fun onCropTypeSelected(x: String, y: String, onCropTypeSelected: (CropType) -> Unit) {
+    val xValue = x.toFloatOrNull() ?: 1f
+    val yValue = y.toFloatOrNull() ?: 1f
+    if (xValue <= 0f || yValue <= 0f) {
+        // Handle invalid input (e.g., show a toast or log an error)
+        return
+    }
+    onCropTypeSelected(CropType.CUSTOM_RATIO(xValue, yValue))
 }
 
 @Composable

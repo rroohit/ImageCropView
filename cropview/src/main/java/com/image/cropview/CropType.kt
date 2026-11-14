@@ -13,21 +13,25 @@ package com.image.cropview
  *  - [RATIO_4_3] – Locks the crop rectangle to a 4 : 3 (standard) aspect ratio.
  *  - [RATIO_16_9] – Locks the crop rectangle to a 16 : 9 (widescreen) aspect ratio.
  *  - [RATIO_9_16] – Locks the crop rectangle to a 9 : 16 (portrait / stories) aspect ratio.
+ *  - [CUSTOM_RATIO] – Locks the crop rectangle to a user-defined aspect ratio, specified by the `x` and `y` constructor parameters.
  */
-public enum class CropType {
-    FREE_STYLE,
-    SQUARE,
-    PROFILE_CIRCLE,
-    RATIO_3_2,
-    RATIO_4_3,
-    RATIO_16_9,
-    RATIO_9_16;
+public sealed class CropType(public val x: Float, public val y: Float) {
+    public object FREE_STYLE : CropType(0f, 0f)
+    public object SQUARE : CropType(1f, 1f)
+    public object PROFILE_CIRCLE : CropType(1f, 1f)
+    public object RATIO_3_2 : CropType(3f, 2f)
+    public object RATIO_4_3 : CropType(4f, 3f)
+    public object RATIO_16_9 : CropType(16f, 9f)
+    public object RATIO_9_16 : CropType(9f, 16f)
+    public class CUSTOM_RATIO(x: Float, y: Float) : CropType(x, y)
 
     /**
      *  - Returns the width-to-height aspect ratio for fixed-ratio crop types.
      *
      *  For [RATIO_3_2], [RATIO_4_3], [RATIO_16_9], and [RATIO_9_16] this returns the
      *  corresponding floating-point ratio (e.g. `16f / 9f` for [RATIO_16_9]).
+     *
+     *  For [CUSTOM_RATIO]  returns the ratio of the provided `x` and `y` values.
      *
      *  Returns `null` for [FREE_STYLE] (no constraint) and for [SQUARE] / [PROFILE_CIRCLE],
      *  which use their own dedicated 1 : 1 constraint logic in [CropUtil].
@@ -36,10 +40,11 @@ public enum class CropType {
      *          constraint applies through this method.
      */
     public fun aspectRatio(): Float? = when (this) {
-        RATIO_3_2 -> 3f / 2f
-        RATIO_4_3 -> 4f / 3f
-        RATIO_16_9 -> 16f / 9f
-        RATIO_9_16 -> 9f / 16f
+        RATIO_3_2 ,
+        RATIO_4_3 ,
+        RATIO_16_9 ,
+        RATIO_9_16 ,
+        is CUSTOM_RATIO -> x / y
         else -> null
     }
 }
